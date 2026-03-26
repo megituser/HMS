@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Doctor Dashboard | HMS</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body { background:#f4f7fb; font-family:"Segoe UI",system-ui; }
+.sidebar {
+    width:260px; min-height:100vh;
+    background:linear-gradient(135deg,#0d6efd,#0a58ca);
+    color:white;
+}
+.sidebar a {
+    display:block; padding:12px 20px;
+    color:white; text-decoration:none;
+}
+.sidebar a:hover { background:rgba(255,255,255,.15); }
+.topbar {
+    background:white; padding:15px 30px;
+    border-bottom:1px solid #e3e6ea;
+}
+.content { padding:30px; }
+</style>
+</head>
+
+<body>
+<div class="d-flex">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h4 class="p-3">👨‍⚕️ Doctor Panel</h4>
+    <a href="#" onclick="showProfile()">My Profile</a>
+    <a href="#" onclick="loadAppointments()">My Appointments</a>
+    <a href="#" onclick="logout()" class="text-warning mt-4">Logout</a>
+</div>
+
+<!-- MAIN -->
+<div class="flex-grow-1">
+
+<div class="topbar">
+    <h5>Doctor Dashboard</h5>
+</div>
+
+<div class="content">
+
+<!-- PROFILE -->
+<div id="profileSection" class="mb-4" style="display:none">
+    <h4>My Profile</h4>
+    <div class="card p-3">
+        <p><b>Name:</b> <span id="pName"></span></p>
+        <p><b>Department:</b> <span id="pDept"></span></p>
+        <p><b>Specialization:</b> <span id="pSpec"></span></p>
+        <p><b>Experience:</b> <span id="pExp"></span> years</p>
+        <p><b>Phone:</b> <span id="pPhone"></span></p>
+    </div>
+</div>
+
+<!-- APPOINTMENTS -->
+<div id="appointmentSection">
+    <h4>My Appointments</h4>
+    <table class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>Patient</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody id="appointmentTable"></tbody>
+    </table>
+</div>
+
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ================= AUTH GUARD ================= */
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+if (!token || role !== "ROLE_DOCTOR") {
+    location.href = "index.html";
+}
+
+const headers = {
+    "Content-Type":"application/json",
+    "Authorization":"Bearer " + token
+};
+
+let doctorId = null;
+
+/* ================= LOAD PROFILE ================= */
+function showProfile() {
+    fetch("http://localhost:8080/api/doctors/me", { headers })
+        .then(r => r.json())
+        .then(d => {
+            doctorId = d.id;
+            profileSection.style.display="block";
+            pName.innerText = d.firstName + " " + d.lastName;
+            pDept.innerText = d.departmentName;
+            pSpec.innerText = d.specialization || "-";
+            pExp.innerText  = d.experienceYears || "-";
+            pPhone.innerText = d.phone;
+        });
+}
+
+/* ================= LOAD APPOINTMENTS ================= */
+function loadAppointments() {
+    appointmentSection.style.display="block";
+
+    fetch(`http://localhost:8080/api/appointments/doctor/${doctorId}`, { headers })
+        .then(r => r.json())
+        .then(data => {
+            const t = document.getElementById("appointmentTable");
+            t.innerHTML="";
+            data.forEach(a => {
+                t.innerHTML += `
+                    <tr>
+                        <td>${a.patientName}</td>
+                        <td>${a.appointmentDate}</td>
+                        <td>${a.appointmentTime}</td>
+                        <td>
+                            <span class="badge bg-${a.status==="BOOKED"?"primary":"secondary"}">
+                                ${a.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+}
+
+/* ================= LOGOUT ================= */
+function logout() {
+    localStorage.clear();
+    location.href="index.html";
+}
+
+/* INIT */
+showProfile();
+</script>
+</body>
+</html>
