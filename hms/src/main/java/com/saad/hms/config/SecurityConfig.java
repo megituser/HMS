@@ -121,6 +121,36 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.DELETE, "/api/appointments/**")
                                 .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST")
 
+
+
+                                 //============== medical records ==========================
+                                .requestMatchers(HttpMethod.GET, "/api/medical-records/my")
+                                .hasRole("DOCTOR")
+
+                                .requestMatchers(HttpMethod.GET, "/api/medical-records/**")
+                                .hasRole("ADMIN")
+
+                                .requestMatchers(HttpMethod.POST, "/api/medical-records/**")
+                                .hasRole("DOCTOR")
+
+                                .requestMatchers(HttpMethod.DELETE, "/api/medical-records/**")
+                                .hasRole("ADMIN")
+
+
+                                //==================billing==================
+                                .requestMatchers(HttpMethod.GET, "/api/invoices/**")
+                                .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
+
+                               .requestMatchers(HttpMethod.POST, "/api/invoices/**")
+                               .hasAnyRole("ADMIN","RECEPTIONIST")
+
+                               .requestMatchers(HttpMethod.GET, "/api/invoices/*/pdf")
+                               .hasAnyRole("ADMIN","RECEPTIONIST","DOCTOR")
+
+
+
+
+
                                 /* ================= DEPARTMENTS ================= */
 
                         // View departments (Admin, Doctor, Receptionist)

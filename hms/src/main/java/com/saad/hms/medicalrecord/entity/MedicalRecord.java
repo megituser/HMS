@@ -1,5 +1,4 @@
-package com.saad.hms.MedicalRecord.entity;
-
+package com.saad.hms.medicalrecord.entity;
 import com.saad.hms.patient.entity.Patient;
 import com.saad.hms.doctor.entity.Doctor;
 import jakarta.persistence.*;
@@ -28,6 +27,10 @@ public class MedicalRecord {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    // ✅ SOFT DELETE FIELD
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     // 🔗 RELATION WITH PATIENT
     @ManyToOne(fetch = FetchType.LAZY)
