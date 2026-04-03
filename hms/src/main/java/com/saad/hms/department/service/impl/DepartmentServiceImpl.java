@@ -4,6 +4,8 @@ import com.saad.hms.department.dto.*;
 import com.saad.hms.department.entity.Department;
 import com.saad.hms.department.repository.DepartmentRepository;
 import com.saad.hms.department.service.DepartmentService;
+import com.saad.hms.exception.BadRequestException;
+import com.saad.hms.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -22,8 +24,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public DepartmentResponseDTO createDepartment(DepartmentRequestDTO request) {
 
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new BadRequestException("Department name is required");
+        }
+
         if (departmentRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new RuntimeException("Department already exists");
+            throw new BadRequestException("Department already exists");
         }
 
         Department department = modelMapper.map(request, Department.class);
@@ -42,8 +48,13 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public DepartmentResponseDTO getDepartmentById(Long id) {
+
+        if (id == null) {
+            throw new BadRequestException("Department ID is required");
+        }
+
         Department department = departmentRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
         return mapToResponse(department);
     }
@@ -51,8 +62,20 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public DepartmentResponseDTO updateDepartment(Long id, DepartmentRequestDTO request) {
 
+        if (id == null) {
+            throw new BadRequestException("Department ID is required");
+        }
+
         Department department = departmentRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+
+        // 🔥 Prevent duplicate name update
+        if (request.getName() != null &&
+                !request.getName().equalsIgnoreCase(department.getName()) &&
+                departmentRepository.existsByNameIgnoreCase(request.getName())) {
+
+            throw new BadRequestException("Department name already exists");
+        }
 
         department.setName(request.getName());
         department.setDescription(request.getDescription());
@@ -63,8 +86,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public void deactivateDepartment(Long id) {
 
+        if (id == null) {
+            throw new BadRequestException("Department ID is required");
+        }
+
         Department department = departmentRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
         department.setActive(false);
         departmentRepository.save(department);

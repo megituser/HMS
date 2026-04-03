@@ -4,6 +4,7 @@ import com.saad.hms.billing.dto.*;
 import com.saad.hms.billing.service.BillingService;
 import com.saad.hms.billing.service.InvoicePdfService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,55 +15,55 @@ import org.springframework.web.bind.annotation.*;
 public class BillingController {
 
     private final BillingService service;
-    private final InvoicePdfService pdfService;
 
     // ✅ CREATE INVOICE
     @PostMapping
     public ResponseEntity<InvoiceResponseDTO> create(
             @Valid @RequestBody CreateInvoiceRequestDTO dto) {
 
-        return ResponseEntity.ok(
-                service.createInvoice(dto.getPatientId())
-        );
+        return ResponseEntity
+                .status(201)
+                .body(service.createInvoice(dto.getPatientId()));
     }
 
     // ✅ ADD ITEM
     @PostMapping("/{id}/items")
     public ResponseEntity<InvoiceResponseDTO> addItem(
-            @PathVariable Long id,
+            @PathVariable @Positive(message = "ID must be positive") Long id,
             @Valid @RequestBody AddItemRequestDTO dto) {
 
         return ResponseEntity.ok(
-                service.addItem(id, dto.getDescription(), dto.getAmount())
-        );
+                service.addItem(id, dto.getDescription(), dto.getAmount()));
     }
 
-    // ✅ MAKE PAYMENT
+    // ✅ PAY
     @PostMapping("/{id}/payments")
     public ResponseEntity<InvoiceResponseDTO> pay(
-            @PathVariable Long id,
+            @PathVariable @Positive(message = "ID must be positive") Long id,
             @Valid @RequestBody PaymentRequestDTO dto) {
 
         return ResponseEntity.ok(
-                service.pay(id, dto.getAmount(), dto.getMethod())
-        );
+                service.pay(id, dto.getAmount(), dto.getMethod()));
     }
 
     // ✅ GET INVOICE
     @GetMapping("/{id}")
-    public ResponseEntity<InvoiceResponseDTO> get(@PathVariable Long id) {
+    public ResponseEntity<InvoiceResponseDTO> get(
+            @PathVariable @Positive(message = "ID must be positive") Long id) {
+
         return ResponseEntity.ok(service.get(id));
     }
 
-    // ✅ DOWNLOAD PDF
+    // ✅ GENERATE PDF
     @GetMapping("/{id}/pdf")
-    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
+    public ResponseEntity<byte[]> generatePdf(
+            @PathVariable @Positive(message = "ID must be positive") Long id,
+            InvoicePdfService pdfService) {
 
         byte[] pdf = pdfService.generatePdf(id);
 
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=invoice-" + id + ".pdf")
-                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=invoice.pdf")
                 .body(pdf);
     }
 }

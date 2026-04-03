@@ -1,24 +1,29 @@
 package com.saad.hms.appointment.dto;
 
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Data
+@Getter
+@Setter
 public class AppointmentRequestDTO {
 
-    @NotNull
+    @NotNull(message = "Patient ID is required")
     private Long patientId;
 
-    @NotNull
+    @NotNull(message = "Doctor ID is required")
     private Long doctorId;
 
-    @NotNull
+    @NotNull(message = "Appointment date is required")
+    @FutureOrPresent(message = "Appointment date must be today or future")
     private LocalDate appointmentDate;
 
-    @NotNull
+    @NotNull(message = "Appointment time is required")
     private LocalTime appointmentTime;
 
     private String notes;

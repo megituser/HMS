@@ -1,8 +1,6 @@
 package com.saad.hms.config;
 
-import com.saad.hms.security.CustomUserDetailsService;
-import com.saad.hms.security.JwtAuthenticationFilter;
-import com.saad.hms.security.JwtUtils;
+import com.saad.hms.security.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,8 +18,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtUtils jwtUtils;
-    private final CustomUserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtFilter;
+    private final JwtAuthenticationEntryPoint entryPoint;
+    private final CustomAccessDeniedHandler deniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -31,35 +30,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        JwtAuthenticationFilter jwtFilter =
-                new JwtAuthenticationFilter(jwtUtils, userDetailsService);
-
         http
-                // Disable CSRF (JWT is stateless)
                 .csrf(csrf -> csrf.disable())
-
-                // Enable CORS (default)
                 .cors(cors -> {})
-
-                // Stateless session (JWT)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                // 🔥 GLOBAL EXCEPTION HANDLING (VERY IMPORTANT)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(entryPoint)
+                        .accessDeniedHandler(deniedHandler)
+                )
+
                 .authorizeHttpRequests(auth -> auth
+
+                        // AUTH
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // USER MANAGEMENT (ADMIN ONLY)
-                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/users/available-doctors")
-                        .hasRole("ADMIN")
+                        // USERS (ADMIN)
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
 
-
-                        // PATIENT MANAGEMENT
+                        // PATIENTS
                         .requestMatchers(HttpMethod.GET, "/api/patients/**")
                         .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
 
@@ -72,113 +64,81 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/patients/**")
                         .hasRole("ADMIN")
 
-                        /* ================= DOCTOR DASHBOARD ================= */
-
-                        // Doctor → apni profile
+                        // DOCTORS
                         .requestMatchers(HttpMethod.GET, "/api/doctors/me")
                         .hasRole("DOCTOR")
 
-                        // Doctor → apni appointments
+                        .requestMatchers(HttpMethod.GET, "/api/doctors/**")
+                        .hasAnyRole("ADMIN","RECEPTIONIST")
+
+                        .requestMatchers(HttpMethod.POST, "/api/doctors/**")
+                        .hasAnyRole("ADMIN","RECEPTIONIST")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/doctors/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/doctors/**")
+                        .hasRole("ADMIN")
+
+                        // APPOINTMENTS
                         .requestMatchers(HttpMethod.GET, "/api/appointments/my")
                         .hasRole("DOCTOR")
 
-                        // Doctor → appointment complete
-                        .requestMatchers(HttpMethod.PUT, "/api/appointments/*/complete")
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/**")
+                        .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
+
+                        .requestMatchers(HttpMethod.POST, "/api/appointments/**")
+                        .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/appointments/**")
+                        .hasAnyRole("ADMIN","DOCTOR")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/appointments/**")
+                        .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
+
+                        // MEDICAL RECORDS
+                        .requestMatchers(HttpMethod.GET, "/api/medical-records/my")
                         .hasRole("DOCTOR")
 
-                        // Doctor → apne patients (future use)
-                        .requestMatchers(HttpMethod.GET, "/api/patients/my")
+                        .requestMatchers(HttpMethod.GET, "/api/medical-records/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/medical-records/**")
                         .hasRole("DOCTOR")
 
+                        .requestMatchers(HttpMethod.DELETE, "/api/medical-records/**")
+                        .hasRole("ADMIN")
 
-                        // DOCTOR MANAGEMENT
-                        .requestMatchers(HttpMethod.GET, "/api/doctors/**").hasAnyRole("ADMIN","RECEPTIONIST")
-                        .requestMatchers(HttpMethod.POST, "/api/doctors/**").hasAnyRole("ADMIN","RECEPTIONIST")
-                        .requestMatchers(HttpMethod.PUT, "/api/doctors/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/doctors/**").hasRole("ADMIN")
+                        // 🔥 BILLING (ORDER FIXED)
+                        .requestMatchers(HttpMethod.GET, "/api/invoices/*/pdf")
+                        .hasAnyRole("ADMIN","RECEPTIONIST","DOCTOR")
 
+                        .requestMatchers(HttpMethod.GET, "/api/invoices/**")
+                        .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
 
+                        .requestMatchers(HttpMethod.POST, "/api/invoices/**")
+                        .hasAnyRole("ADMIN","RECEPTIONIST")
 
-                                // ================= APPOINTMENTS =================
-
-                                 //  Doctor → only HIS appointments
-                                .requestMatchers(HttpMethod.GET, "/api/appointments/my")
-                                .hasRole("DOCTOR")
-
-                                // View appointments
-                                .requestMatchers(HttpMethod.GET, "/api/appointments/**")
-                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST")
-
-                                //  Create appointment
-                                .requestMatchers(HttpMethod.POST, "/api/appointments/**")
-                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST")
-
-                                 //  Update / Complete appointment
-                                .requestMatchers(HttpMethod.PUT, "/api/appointments/**")
-                                .hasAnyRole("ADMIN", "DOCTOR")
-
-                                 //  Cancel appointment
-                                .requestMatchers(HttpMethod.DELETE, "/api/appointments/**")
-                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST")
-
-
-
-                                 //============== medical records ==========================
-                                .requestMatchers(HttpMethod.GET, "/api/medical-records/my")
-                                .hasRole("DOCTOR")
-
-                                .requestMatchers(HttpMethod.GET, "/api/medical-records/**")
-                                .hasRole("ADMIN")
-
-                                .requestMatchers(HttpMethod.POST, "/api/medical-records/**")
-                                .hasRole("DOCTOR")
-
-                                .requestMatchers(HttpMethod.DELETE, "/api/medical-records/**")
-                                .hasRole("ADMIN")
-
-
-                                //==================billing==================
-                                .requestMatchers(HttpMethod.GET, "/api/invoices/**")
-                                .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
-
-                               .requestMatchers(HttpMethod.POST, "/api/invoices/**")
-                               .hasAnyRole("ADMIN","RECEPTIONIST")
-
-                               .requestMatchers(HttpMethod.GET, "/api/invoices/*/pdf")
-                               .hasAnyRole("ADMIN","RECEPTIONIST","DOCTOR")
-
-
-
-
-
-                                /* ================= DEPARTMENTS ================= */
-
-                        // View departments (Admin, Doctor, Receptionist)
+                        // DEPARTMENTS
                         .requestMatchers(HttpMethod.GET, "/api/departments/**")
-                        .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST")
+                        .hasAnyRole("ADMIN","DOCTOR","RECEPTIONIST")
 
-                        // Create department (Admin only)
                         .requestMatchers(HttpMethod.POST, "/api/departments")
                         .hasRole("ADMIN")
 
-                        // Update department (Admin only)
                         .requestMatchers(HttpMethod.PUT, "/api/departments/**")
                         .hasRole("ADMIN")
 
-                        // Delete / deactivate department (Admin only)
                         .requestMatchers(HttpMethod.DELETE, "/api/departments/**")
                         .hasRole("ADMIN")
 
-                        /* ================= OTHERS ================= */
                         .anyRequest().authenticated()
                 )
 
-
-
-                // JWT filter
+                // 🔥 JWT FILTER (BEAN)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
 
         return http.build();
     }
 }
+

@@ -1,5 +1,6 @@
 package com.saad.hms.user.controller;
 
+import com.saad.hms.exception.ResourceNotFoundException;
 import com.saad.hms.user.dto.CreateUserRequest;
 import com.saad.hms.user.dto.UpdateUserRequest;
 import com.saad.hms.user.dto.UserResponseDTO;
@@ -7,6 +8,9 @@ import com.saad.hms.user.entity.Role;
 import com.saad.hms.user.entity.User;
 import com.saad.hms.user.repository.RoleRepository;
 import com.saad.hms.user.repository.UserRepository;
+import com.saad.hms.user.service.UserService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,35 +24,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final PasswordEncoder passwordEncoder;
-    private final RoleRepository roleRepository;
+    private final UserService userService;
     private final UserRepository userRepository;
 
-    // ✅ CREATE USER (ADMIN ONLY)
+    // ✅ CREATE USER
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createUser(@RequestBody CreateUserRequest req) {
+    public ResponseEntity<Void> createUser(
+            @Valid @RequestBody CreateUserRequest req) {
 
-        Role role = roleRepository.findByName(req.getRole())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-
-        User user = new User();
-        user.setUsername(req.getUsername());
-        user.setEmail(req.getEmail());
-        user.setPassword(passwordEncoder.encode(req.getPassword()));
-        user.setRole(role);
-        user.setEnabled(true);
-
-        userRepository.save(user);
-
-        return ResponseEntity.ok().build();
+        userService.createUser(req);
+        return ResponseEntity.status(201).build();
     }
 
-    // ✅ GET ALL USERS (ADMIN ONLY)
+    // ✅ GET ALL USERS
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll()
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+
+        List<UserResponseDTO> users = userRepository.findAll()
                 .stream()
                 .map(u -> {
                     UserResponseDTO dto = new UserResponseDTO();
@@ -60,32 +54,22 @@ public class UserController {
                     return dto;
                 })
                 .toList();
+
+        return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/available-doctors")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getAvailableDoctorUsers() {
-        return userRepository.findAvailableDoctorUsers();
-    }
-
-
+    // ✅ UPDATE USER
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateUser(
-            @PathVariable Long id,
+    public ResponseEntity<Void> updateUser(
+            @PathVariable @Positive Long id,
             @RequestBody UpdateUserRequest req) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (req.getEmail() != null)
             user.setEmail(req.getEmail());
-
-        if (req.getRole() != null) {
-            Role role = roleRepository.findByName(req.getRole())
-                    .orElseThrow(() -> new RuntimeException("Role not found"));
-            user.setRole(role);
-        }
 
         if (req.getEnabled() != null)
             user.setEnabled(req.getEnabled());

@@ -2,17 +2,15 @@ package com.saad.hms.security;
 
 import com.saad.hms.user.entity.User;
 import com.saad.hms.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-
-    public CustomUserDetailsService(UserRepository repo) {
-        this.userRepository = repo;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username)
@@ -20,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + username));
+                        new UsernameNotFoundException("Invalid credentials"));
 
         return new CustomUserDetails(user);
     }

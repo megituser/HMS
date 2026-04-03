@@ -3,6 +3,8 @@ package com.saad.hms.billing.service;
 import com.saad.hms.billing.dto.InvoiceResponseDTO;
 import com.saad.hms.billing.entity.*;
 import com.saad.hms.billing.repository.*;
+import com.saad.hms.exception.BadRequestException;
+import com.saad.hms.exception.ResourceNotFoundException;
 import com.saad.hms.patient.entity.Patient;
 import com.saad.hms.patient.repository.PatientRepository;
 import jakarta.transaction.Transactional;
@@ -21,8 +23,12 @@ public class BillingService {
 
     public InvoiceResponseDTO createInvoice(Long patientId) {
 
+        if (patientId == null) {
+            throw new BadRequestException("Patient ID is required");
+        }
+
         Patient patient = patientRepo.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
         Invoice invoice = Invoice.builder()
                 .patient(patient)
@@ -36,11 +42,20 @@ public class BillingService {
 
     public InvoiceResponseDTO addItem(Long id, String desc, Double amount) {
 
-        if (amount == null || amount <= 0)
-            throw new RuntimeException("Invalid amount");
+        if (id == null) {
+            throw new BadRequestException("Invoice ID is required");
+        }
+
+        if (amount == null || amount <= 0) {
+            throw new BadRequestException("Amount must be greater than 0");
+        }
+
+        if (desc == null || desc.isBlank()) {
+            throw new BadRequestException("Description is required");
+        }
 
         Invoice invoice = invoiceRepo.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
         BillingItem item = BillingItem.builder()
                 .description(desc)
@@ -57,13 +72,26 @@ public class BillingService {
 
     public InvoiceResponseDTO pay(Long id, Double amount, String method) {
 
+        if (id == null) {
+            throw new BadRequestException("Invoice ID is required");
+        }
+
+        if (amount == null || amount <= 0) {
+            throw new BadRequestException("Amount must be greater than 0");
+        }
+
+        if (method == null || method.isBlank()) {
+            throw new BadRequestException("Payment method is required");
+        }
+
         Invoice invoice = invoiceRepo.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
         double remaining = invoice.getTotalAmount() - invoice.getPaidAmount();
 
-        if (amount <= 0 || amount > remaining)
-            throw new RuntimeException("Invalid payment");
+        if (amount > remaining) {
+            throw new BadRequestException("Payment exceeds remaining amount");
+        }
 
         Payment payment = Payment.builder()
                 .amountPaid(amount)
@@ -82,8 +110,13 @@ public class BillingService {
     }
 
     public InvoiceResponseDTO get(Long id) {
+
+        if (id == null) {
+            throw new BadRequestException("Invoice ID is required");
+        }
+
         return map(invoiceRepo.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Invoice not found")));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found")));
     }
 
     private InvoiceResponseDTO map(Invoice i) {
