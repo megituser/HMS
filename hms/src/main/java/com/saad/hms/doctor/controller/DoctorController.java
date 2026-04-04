@@ -2,17 +2,23 @@ package com.saad.hms.doctor.controller;
 
 import com.saad.hms.doctor.dto.*;
 import com.saad.hms.doctor.service.DoctorService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/doctors")
 @RequiredArgsConstructor
+@Tag(name = "Doctors", description = "Manage doctors")
 public class DoctorController {
 
     private final DoctorService doctorService;
@@ -23,11 +29,16 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.createDoctor(request));
     }
 
+    // AFTER
     @GetMapping
-    public ResponseEntity<List<DoctorResponseDTO>> getAllDoctors() {
-        return ResponseEntity.ok(doctorService.getAllDoctors());
-    }
+    public ResponseEntity<Page<DoctorResponseDTO>> getAllDoctors(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy) {
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        return ResponseEntity.ok(doctorService.getAllDoctors(pageable));
+    }
     @GetMapping("/department/{departmentId}")
     public ResponseEntity<List<DoctorResponseDTO>> getDoctorsByDepartment(
             @PathVariable Long departmentId) {

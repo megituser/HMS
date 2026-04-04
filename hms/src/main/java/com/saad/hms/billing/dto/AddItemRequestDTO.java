@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 public class AddItemRequestDTO {
@@ -15,5 +17,5 @@ public class AddItemRequestDTO {
 
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be greater than 0")
-    private Double amount;
+    private BigDecimal amount;
 }

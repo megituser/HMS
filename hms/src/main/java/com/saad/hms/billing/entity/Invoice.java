@@ -4,6 +4,8 @@ import com.saad.hms.patient.entity.Patient;
 import com.saad.hms.appointment.entity.Appointment;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,8 +18,8 @@ public class Invoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Double totalAmount;
-    private Double paidAmount;
+    private BigDecimal totalAmount;
+    private BigDecimal paidAmount;
 
     @Column(nullable = false)
     private String status; // PENDING, PARTIAL, PAID
@@ -43,8 +45,8 @@ public class Invoice {
     public void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = createdAt;
-        if (totalAmount == null) totalAmount = 0.0;
-        if (paidAmount == null) paidAmount = 0.0;
+        if (totalAmount == null) totalAmount = BigDecimal.ZERO;
+        if (paidAmount == null) paidAmount = BigDecimal.ZERO;
         if (status == null) status = "PENDING";
     }
 

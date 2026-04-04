@@ -14,6 +14,9 @@ import com.saad.hms.patient.repository.PatientRepository;
 import com.saad.hms.user.entity.User;
 import com.saad.hms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
@@ -43,6 +47,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         Doctor doctor = doctorRepository.findByIdAndActiveTrue(request.getDoctorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
+        log.info("Creating appointment for patientId: {} with doctorId: {}",
+                request.getPatientId(), request.getDoctorId());
+
         Appointment appointment = Appointment.builder()
                 .patient(patient)
                 .doctor(doctor)
@@ -52,15 +59,19 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .status("SCHEDULED")
                 .build();
 
-        return mapToResponse(appointmentRepository.save(appointment));
+        Appointment saved = appointmentRepository.save(appointment);
+
+        log.info("Appointment created successfully with id: {}", saved.getId());
+
+        return mapToResponse(saved);
     }
 
     @Override
-    public List<AppointmentResponseDTO> getAllAppointments() {
-        return appointmentRepository.findByActiveTrue()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+    public Page<AppointmentResponseDTO> getAllAppointments(Pageable pageable) {
+        log.debug("Fetching active appointments - page: {}, size: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+        return appointmentRepository.findByActiveTrue(pageable)
+                .map(this::mapToResponse);
     }
 
     @Override
@@ -69,6 +80,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (patientId == null) {
             throw new BadRequestException("Patient ID is required");
         }
+
+        log.debug("Fetching appointments for patientId: {}", patientId);
 
         return appointmentRepository.findByPatientIdAndActiveTrue(patientId)
                 .stream()
@@ -83,6 +96,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new BadRequestException("Doctor ID is required");
         }
 
+        log.debug("Fetching appointments for doctorId: {}", doctorId);
+
         return appointmentRepository.findByDoctorIdAndActiveTrue(doctorId)
                 .stream()
                 .map(this::mapToResponse)
@@ -96,6 +111,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new BadRequestException("Appointment ID is required");
         }
 
+        log.debug("Fetching appointment with id: {}", id);
+
         Appointment appointment = appointmentRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
 
@@ -104,6 +121,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<AppointmentResponseDTO> getAllAppointmentsForAdmin() {
+        log.debug("Fetching all appointments for admin");
         return appointmentRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
@@ -123,8 +141,12 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new ForbiddenException("You can only complete your own appointments");
         }
 
+        log.info("Completing appointment with id: {} by doctor: {}", id, username);
+
         appt.setStatus("COMPLETED");
         appointmentRepository.save(appt);
+
+        log.info("Appointment completed successfully with id: {}", id);
     }
 
     @Override
@@ -132,6 +154,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         String username = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
+
+        log.debug("Fetching appointments for logged-in doctor: {}", username);
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -155,9 +179,13 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new BadRequestException("Appointment already cancelled");
         }
 
+        log.info("Cancelling appointment with id: {}", id);
+
         appointment.setStatus("CANCELLED");
         appointment.setActive(false);
         appointmentRepository.save(appointment);
+
+        log.info("Appointment cancelled successfully with id: {}", id);
     }
 
     private AppointmentResponseDTO mapToResponse(Appointment appointment) {

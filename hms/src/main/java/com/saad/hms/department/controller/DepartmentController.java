@@ -2,6 +2,7 @@ package com.saad.hms.department.controller;
 
 import com.saad.hms.department.dto.*;
 import com.saad.hms.department.service.DepartmentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/departments")
 @RequiredArgsConstructor
+@Tag(name = "Departments", description = "Manage departments")
 public class DepartmentController {
 
     private final DepartmentService departmentService;

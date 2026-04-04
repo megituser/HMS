@@ -7,7 +7,10 @@ import com.saad.hms.patient.entity.Patient;
 import com.saad.hms.patient.repository.PatientRepository;
 import com.saad.hms.patient.service.PatientService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
@@ -32,18 +36,21 @@ public class PatientServiceImpl implements PatientService {
             throw new BadRequestException("Patient with this phone already exists");
         }
 
+        log.info("Creating patient with phone: {}", request.getPhone());
+
         Patient patient = modelMapper.map(request, Patient.class);
         Patient saved = patientRepository.save(patient);
+
+        log.info("Patient created successfully with id: {}", saved.getId());
 
         return mapToResponse(saved);
     }
 
     @Override
-    public List<PatientResponseDTO> getAllActivePatients() {
-        return patientRepository.findByActiveTrue()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+    public Page<PatientResponseDTO> getAllActivePatients(Pageable pageable) {
+        log.debug("Fetching active patients - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        return patientRepository.findByActiveTrue(pageable)
+                .map(this::mapToResponse);
     }
 
     @Override
@@ -52,6 +59,8 @@ public class PatientServiceImpl implements PatientService {
         if (id == null) {
             throw new BadRequestException("Patient ID is required");
         }
+
+        log.debug("Fetching patient with id: {}", id);
 
         Patient patient = patientRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
@@ -69,16 +78,18 @@ public class PatientServiceImpl implements PatientService {
         Patient patient = patientRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
-        // 🔥 FIX: prevent duplicate phone update
         if (request.getPhone() != null &&
                 !request.getPhone().equals(patient.getPhone()) &&
                 patientRepository.existsByPhone(request.getPhone())) {
-
             throw new BadRequestException("Phone number already in use");
         }
 
+        log.info("Updating patient with id: {}", id);
+
         modelMapper.map(request, patient);
         Patient updated = patientRepository.save(patient);
+
+        log.info("Patient updated successfully with id: {}", updated.getId());
 
         return mapToResponse(updated);
     }
@@ -93,8 +104,12 @@ public class PatientServiceImpl implements PatientService {
         Patient patient = patientRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
+        log.info("Deactivating patient with id: {}", id);
+
         patient.setActive(false);
         patientRepository.save(patient);
+
+        log.info("Patient deactivated successfully with id: {}", id);
     }
 
     @Override
@@ -103,6 +118,8 @@ public class PatientServiceImpl implements PatientService {
         if (keyword == null || keyword.isBlank()) {
             throw new BadRequestException("Search keyword is required");
         }
+
+        log.debug("Searching patients with keyword: {}", keyword);
 
         return patientRepository.searchActivePatients(keyword)
                 .stream()

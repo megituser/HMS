@@ -2,6 +2,7 @@ package com.saad.hms.medicalrecord.controller;
 
 import com.saad.hms.medicalrecord.dto.*;
 import com.saad.hms.medicalrecord.service.MedicalRecordService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/medical-records")
 @RequiredArgsConstructor
+@Tag(name = "Medical Records", description = "Patient medical records")
 public class MedicalRecordController {
 
     private final MedicalRecordService service;

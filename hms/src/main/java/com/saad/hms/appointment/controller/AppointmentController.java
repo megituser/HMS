@@ -2,9 +2,14 @@ package com.saad.hms.appointment.controller;
 
 import com.saad.hms.appointment.dto.*;
 import com.saad.hms.appointment.service.AppointmentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/appointments")
 @RequiredArgsConstructor
+@Tag(name = "Appointments", description = "Manage appointments")
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
@@ -28,10 +34,14 @@ public class AppointmentController {
                 .body(appointmentService.createAppointment(request));
     }
 
-    // ✅ GET ALL
     @GetMapping
-    public ResponseEntity<List<AppointmentResponseDTO>> getAllAppointments() {
-        return ResponseEntity.ok(appointmentService.getAllAppointments());
+    public ResponseEntity<Page<AppointmentResponseDTO>> getAllAppointments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        return ResponseEntity.ok(appointmentService.getAllAppointments(pageable));
     }
 
     // ✅ DOCTOR → MY APPOINTMENTS
@@ -68,7 +78,6 @@ public class AppointmentController {
                 appointmentService.getAppointmentsByPatient(patientId));
     }
 
-    // ✅ GET BY DOCTOR
     @GetMapping("/doctor/{doctorId}")
     public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByDoctor(
             @PathVariable @Positive(message = "Doctor ID must be positive") Long doctorId) {

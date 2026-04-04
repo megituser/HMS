@@ -1,17 +1,18 @@
 package com.saad.hms.patient.repository;
 
 import com.saad.hms.patient.entity.Patient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 import java.util.Optional;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     // Find only active patients
-    List<Patient> findByActiveTrue();
+    Page<Patient> findByActiveTrue(Pageable pageable);
 
     // Find active patient by ID
     Optional<Patient> findByIdAndActiveTrue(Long id);

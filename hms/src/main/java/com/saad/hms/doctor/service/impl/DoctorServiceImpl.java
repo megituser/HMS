@@ -11,6 +11,9 @@ import com.saad.hms.exception.ResourceNotFoundException;
 import com.saad.hms.user.entity.User;
 import com.saad.hms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +23,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class DoctorServiceImpl implements DoctorService {
 
     private final DoctorRepository doctorRepository;
@@ -52,6 +56,8 @@ public class DoctorServiceImpl implements DoctorService {
                 .findByIdAndActiveTrue(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
+        log.info("Creating doctor for userId: {} in departmentId: {}", request.getUserId(), request.getDepartmentId());
+
         Doctor doctor = Doctor.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -65,15 +71,16 @@ public class DoctorServiceImpl implements DoctorService {
 
         doctorRepository.save(doctor);
 
+        log.info("Doctor created successfully with id: {}", doctor.getId());
+
         return mapToResponse(doctor);
     }
 
     @Override
-    public List<DoctorResponseDTO> getAllDoctors() {
-        return doctorRepository.findByActiveTrue()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+    public Page<DoctorResponseDTO> getAllDoctors(Pageable pageable) {
+        log.debug("Fetching active doctors - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        return doctorRepository.findByActiveTrue(pageable)
+                .map(this::mapToResponse);
     }
 
     @Override
@@ -82,6 +89,8 @@ public class DoctorServiceImpl implements DoctorService {
         if (departmentId == null) {
             throw new BadRequestException("Department ID is required");
         }
+
+        log.debug("Fetching doctors for departmentId: {}", departmentId);
 
         return doctorRepository.findByDepartmentIdAndActiveTrue(departmentId)
                 .stream()
@@ -95,6 +104,8 @@ public class DoctorServiceImpl implements DoctorService {
         if (id == null) {
             throw new BadRequestException("Doctor ID is required");
         }
+
+        log.debug("Fetching doctor with id: {}", id);
 
         Doctor doctor = doctorRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
@@ -115,6 +126,8 @@ public class DoctorServiceImpl implements DoctorService {
         Department department = departmentRepository.findByIdAndActiveTrue(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
+        log.info("Updating doctor with id: {}", id);
+
         doctor.setFirstName(request.getFirstName());
         doctor.setLastName(request.getLastName());
         doctor.setPhone(request.getPhone());
@@ -122,6 +135,8 @@ public class DoctorServiceImpl implements DoctorService {
         doctor.setSpecialization(request.getSpecialization());
         doctor.setExperienceYears(request.getExperienceYears());
         doctor.setDepartment(department);
+
+        log.info("Doctor updated successfully with id: {}", id);
 
         return mapToResponse(doctor);
     }
@@ -136,8 +151,12 @@ public class DoctorServiceImpl implements DoctorService {
         Doctor doctor = doctorRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
+        log.info("Deactivating doctor with id: {}", id);
+
         doctor.setActive(false);
         doctorRepository.save(doctor);
+
+        log.info("Doctor deactivated successfully with id: {}", id);
     }
 
     @Override
@@ -145,6 +164,8 @@ public class DoctorServiceImpl implements DoctorService {
 
         String username = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
+
+        log.debug("Fetching profile for username: {}", username);
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -156,7 +177,6 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     private DoctorResponseDTO mapToResponse(Doctor doctor) {
-
         return DoctorResponseDTO.builder()
                 .id(doctor.getId())
                 .firstName(doctor.getFirstName())

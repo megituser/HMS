@@ -1,6 +1,8 @@
 package com.saad.hms.doctor.repository;
 
 import com.saad.hms.doctor.entity.Doctor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
@@ -8,7 +10,7 @@ import java.util.Optional;
 
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
-    List<Doctor> findByActiveTrue();
+    Page<Doctor> findByActiveTrue(Pageable pageable);
 
     Optional<Doctor> findByIdAndActiveTrue(Long id);
 

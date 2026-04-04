@@ -3,6 +3,7 @@ package com.saad.hms.billing.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,7 +15,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Double amountPaid;
+    private BigDecimal amountPaid;
     private String paymentMethod;
     private String status;
 

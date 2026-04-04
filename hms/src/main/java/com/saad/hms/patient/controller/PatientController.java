@@ -2,16 +2,21 @@ package com.saad.hms.patient.controller;
 import com.saad.hms.patient.dto.PatientRequestDTO;
 import com.saad.hms.patient.dto.PatientResponseDTO;
 import com.saad.hms.patient.service.PatientService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/patients")
 @RequiredArgsConstructor
+@Tag(name = "Patients", description = "Manage patients")
 public class PatientController {
 
     private final PatientService patientService;
@@ -23,8 +28,13 @@ public class PatientController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PatientResponseDTO>> getAllPatients() {
-        return ResponseEntity.ok(patientService.getAllActivePatients());
+    public ResponseEntity<Page<PatientResponseDTO>> getAllPatients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        return ResponseEntity.ok(patientService.getAllActivePatients(pageable));
     }
 
     @GetMapping("/{id}")

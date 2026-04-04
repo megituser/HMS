@@ -1,6 +1,8 @@
 package com.saad.hms.doctor.service;
 
 import com.saad.hms.doctor.dto.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -8,7 +10,7 @@ public interface DoctorService {
 
     DoctorResponseDTO createDoctor(DoctorRequestDTO request);
 
-    List<DoctorResponseDTO> getAllDoctors();
+    Page<DoctorResponseDTO> getAllDoctors(Pageable pageable);
 
     List<DoctorResponseDTO> getDoctorsByDepartment(Long departmentId);
 

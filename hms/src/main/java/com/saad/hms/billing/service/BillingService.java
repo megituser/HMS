@@ -7,13 +7,17 @@ import com.saad.hms.exception.BadRequestException;
 import com.saad.hms.exception.ResourceNotFoundException;
 import com.saad.hms.patient.entity.Patient;
 import com.saad.hms.patient.repository.PatientRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class BillingService {
 
     private final InvoiceRepository invoiceRepo;
@@ -30,23 +34,29 @@ public class BillingService {
         Patient patient = patientRepo.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
+        log.info("Creating invoice for patientId: {}", patientId);
+
         Invoice invoice = Invoice.builder()
                 .patient(patient)
-                .totalAmount(0.0)
-                .paidAmount(0.0)
+                .totalAmount(BigDecimal.ZERO)
+                .paidAmount(BigDecimal.ZERO)
                 .status("PENDING")
                 .build();
 
-        return map(invoiceRepo.save(invoice));
+        Invoice saved = invoiceRepo.save(invoice);
+
+        log.info("Invoice created successfully with id: {}", saved.getId());
+
+        return map(saved);
     }
 
-    public InvoiceResponseDTO addItem(Long id, String desc, Double amount) {
+    public InvoiceResponseDTO addItem(Long id, String desc, BigDecimal amount) {
 
         if (id == null) {
             throw new BadRequestException("Invoice ID is required");
         }
 
-        if (amount == null || amount <= 0) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("Amount must be greater than 0");
         }
 
@@ -57,6 +67,8 @@ public class BillingService {
         Invoice invoice = invoiceRepo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
+        log.info("Adding item '{}' with amount: {} to invoiceId: {}", desc, amount, id);
+
         BillingItem item = BillingItem.builder()
                 .description(desc)
                 .amount(amount)
@@ -65,18 +77,21 @@ public class BillingService {
 
         itemRepo.save(item);
 
-        invoice.setTotalAmount(invoice.getTotalAmount() + amount);
+        invoice.setTotalAmount(invoice.getTotalAmount().add(amount));
+        Invoice updated = invoiceRepo.save(invoice);
 
-        return map(invoiceRepo.save(invoice));
+        log.info("Item added. Invoice {} new total: {}", id, updated.getTotalAmount());
+
+        return map(updated);
     }
 
-    public InvoiceResponseDTO pay(Long id, Double amount, String method) {
+    public InvoiceResponseDTO pay(Long id, BigDecimal amount, String method) {
 
         if (id == null) {
             throw new BadRequestException("Invoice ID is required");
         }
 
-        if (amount == null || amount <= 0) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("Amount must be greater than 0");
         }
 
@@ -87,11 +102,13 @@ public class BillingService {
         Invoice invoice = invoiceRepo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
-        double remaining = invoice.getTotalAmount() - invoice.getPaidAmount();
+        BigDecimal remaining = invoice.getTotalAmount().subtract(invoice.getPaidAmount());
 
-        if (amount > remaining) {
+        if (amount.compareTo(remaining) > 0) {
             throw new BadRequestException("Payment exceeds remaining amount");
         }
+
+        log.info("Processing payment of {} via {} for invoiceId: {}", amount, method, id);
 
         Payment payment = Payment.builder()
                 .amountPaid(amount)
@@ -101,12 +118,18 @@ public class BillingService {
 
         paymentRepo.save(payment);
 
-        double paid = invoice.getPaidAmount() + amount;
+        BigDecimal paid = invoice.getPaidAmount().add(amount);
         invoice.setPaidAmount(paid);
+        invoice.setStatus(
+                paid.compareTo(invoice.getTotalAmount()) == 0 ? "PAID" : "PARTIAL"
+        );
 
-        invoice.setStatus(paid == invoice.getTotalAmount() ? "PAID" : "PARTIAL");
+        Invoice updated = invoiceRepo.save(invoice);
 
-        return map(invoiceRepo.save(invoice));
+        log.info("Payment processed. Invoice {} status: {}, paidAmount: {}",
+                id, updated.getStatus(), updated.getPaidAmount());
+
+        return map(updated);
     }
 
     public InvoiceResponseDTO get(Long id) {
@@ -114,6 +137,8 @@ public class BillingService {
         if (id == null) {
             throw new BadRequestException("Invoice ID is required");
         }
+
+        log.debug("Fetching invoice with id: {}", id);
 
         return map(invoiceRepo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found")));

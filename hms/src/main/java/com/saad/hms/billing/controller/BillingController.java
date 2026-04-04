@@ -3,6 +3,7 @@ package com.saad.hms.billing.controller;
 import com.saad.hms.billing.dto.*;
 import com.saad.hms.billing.service.BillingService;
 import com.saad.hms.billing.service.InvoicePdfService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/invoices")
 @RequiredArgsConstructor
+@Tag(name = "Billing", description = "Invoices and payments")
 public class BillingController {
 
     private final BillingService service;
