@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HMS | Admin Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            background-color: #f4f7fb;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            color: white;
+        }
+
+        .sidebar h4 {
+            padding: 20px;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(255,255,255,0.15);
+        }
+
+        /* Top bar */
+        .topbar {
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e3e6ea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stat-card {
+            border-radius: 10px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h4>
+            <i class="bi bi-hospital"></i> HMS Admin
+        </h4>
+
+        <a href="admin-dashboard.html">
+            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        </a>
+
+        <a href="user.html">
+            <i class="bi bi-people-fill me-2"></i> User Management
+        </a>
+
+        <a href="patients.html">
+            <i class="bi bi-person-lines-fill me-2"></i> Patients
+        </a>
+
+        <a href="doctors.html">
+            <i class="bi bi-person-badge me-2"></i> Doctors
+        </a>
+
+        <a href="departments.html">
+            <i class="bi bi-diagram-3 me-2"></i> Departments
+        </a>
+
+        <a href="appointments.html">
+            <i class="bi bi-calendar-check me-2"></i> Appointments
+        </a>
+
+        <a href="#" onclick="logout()" class="text-warning mt-4">
+            <i class="bi bi-box-arrow-right me-2"></i> Logout
+        </a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="flex-grow-1">
+
+        <!-- TOP BAR -->
+        <div class="topbar d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Admin Dashboard</h5>
+            <span id="adminName" class="text-muted"></span>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- STAT CARDS -->
+            <div class="row g-4">
+
+                <div class="col-md-3">
+                    <div class="card stat-card shadow-sm p-3">
+                        <h6 class="text-muted">Total Patients</h6>
+                        <h3 id="patientCount">0</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card stat-card shadow-sm p-3">
+                        <h6 class="text-muted">Total Doctors</h6>
+                        <h3 id="doctorCount">0</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card stat-card shadow-sm p-3">
+                        <h6 class="text-muted">Departments</h6>
+                        <h3 id="departmentCount">0</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card stat-card shadow-sm p-3">
+                        <h6 class="text-muted">Appointments</h6>
+                        <h3 id="appointmentCount">0</h3>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ADMIN DASHBOARD LOGIC -->
+<script>
+    // 🔐 AUTH GUARD
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    const username = localStorage.getItem("username");
+
+    if (!token || role !== "ROLE_ADMIN") {
+        window.location.href = "index.html";
+    }
+
+    document.getElementById("adminName").innerText = "Welcome, " + username;
+
+    const headers = {
+        "Authorization": "Bearer " + token
+    };
+
+    // 📊 FETCH COUNTS (based on your modules)
+
+    fetch("http://localhost:8080/api/patients", { headers })
+        .then(res => res.json())
+        .then(data => document.getElementById("patientCount").innerText = data.length);
+
+    fetch("http://localhost:8080/api/doctors", { headers })
+        .then(res => res.json())
+        .then(data => document.getElementById("doctorCount").innerText = data.length);
+
+    fetch("http://localhost:8080/api/departments", { headers })
+        .then(res => res.json())
+        .then(data => document.getElementById("departmentCount").innerText = data.length);
+
+    fetch("http://localhost:8080/api/appointments", { headers })
+        .then(res => res.json())
+        .then(data => document.getElementById("appointmentCount").innerText = data.length);
+
+    // 🚪 LOGOUT
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+</script>
+
+</body>
+</html>

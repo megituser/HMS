@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HMS | Departments</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body { background:#f4f7fb; font-family:"Segoe UI",system-ui; }
+        .sidebar {
+            width:260px; min-height:100vh;
+            background:linear-gradient(135deg,#0d6efd,#0a58ca);
+            color:white;
+        }
+        .sidebar a {
+            display:block; padding:12px 20px;
+            color:white; text-decoration:none;
+        }
+        .sidebar a:hover { background:rgba(255,255,255,.15); }
+        .topbar {
+            background:white; padding:15px 30px;
+            border-bottom:1px solid #e3e6ea;
+        }
+        .content { padding:30px; }
+    </style>
+</head>
+
+<body>
+<div class="d-flex">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h4 class="p-3"><i class="bi bi-hospital"></i> HMS Admin</h4>
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="departments.html">Departments</a>
+        <a href="doctors.html">Doctors</a>
+        <a href="patients.html">Patients</a>
+        <a href="#" onclick="logout()" class="text-warning mt-4">Logout</a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="flex-grow-1">
+
+        <!-- TOP BAR -->
+        <div class="topbar d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Departments</h5>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="bi bi-plus-lg"></i> Add Department
+            </button>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th width="150">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="departmentTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal fade" id="departmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add Department</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="departmentId">
+
+                <div class="mb-3">
+                    <label class="form-label">Department Name</label>
+                    <input type="text" class="form-control" id="departmentName">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="description"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" onclick="saveDepartment()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ================= AUTH ================= */
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+if (!token || role !== "ROLE_ADMIN") {
+    location.href = "index.html";
+}
+
+const headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + token
+};
+
+/* ================= LOAD DEPARTMENTS ================= */
+function loadDepartments() {
+    fetch("http://localhost:8080/api/departments", { headers })
+        .then(r => r.json())
+        .then(data => {
+            const t = document.getElementById("departmentTable");
+            t.innerHTML = "";
+
+            data.forEach(d => {
+                t.innerHTML += `
+                    <tr>
+                        <td>${d.name}</td>
+                        <td>${d.description || ""}</td>
+                        <td>
+                            <span class="badge bg-${d.active ? "success" : "secondary"}">
+                                ${d.active ? "Active" : "Inactive"}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                onclick='openEditModal(${JSON.stringify(d)})'>
+                                Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm"
+                                onclick="deleteDepartment(${d.id})">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+}
+
+loadDepartments();
+
+/* ================= MODAL HANDLING ================= */
+function openAddModal() {
+    document.getElementById("modalTitle").innerText = "Add Department";
+    departmentId.value = "";
+    departmentName.value = "";
+    description.value = "";
+    new bootstrap.Modal(document.getElementById("departmentModal")).show();
+}
+
+function openEditModal(d) {
+    document.getElementById("modalTitle").innerText = "Edit Department";
+    departmentId.value = d.id;
+    departmentName.value = d.name;
+    description.value = d.description || "";
+    new bootstrap.Modal(document.getElementById("departmentModal")).show();
+}
+
+/* ================= SAVE ================= */
+function saveDepartment() {
+
+    const payload = {
+        name: departmentName.value.trim(),
+        description: description.value.trim()
+    };
+
+    if (!payload.name) {
+        alert("Department name is required");
+        return;
+    }
+
+    console.log("Payload:", payload); // DEBUG
+
+    const id = departmentId.value;
+    const method = id ? "PUT" : "POST";
+    const url = id
+        ? `http://localhost:8080/api/departments/${id}`
+        : "http://localhost:8080/api/departments";
+
+    fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(payload)
+    })
+    .then(r => {
+        if (!r.ok) throw new Error();
+        location.reload();
+    })
+    .catch(() => alert("Save failed"));
+}
+
+/* ================= DELETE ================= */
+function deleteDepartment(id) {
+    if (!confirm("Deactivate this department?")) return;
+
+    fetch(`http://localhost:8080/api/departments/${id}`, {
+        method: "DELETE",
+        headers
+    })
+    .then(() => location.reload())
+    .catch(() => alert("Delete failed"));
+}
+
+/* ================= LOGOUT ================= */
+function logout() {
+    localStorage.clear();
+    location.href = "index.html";
+}
+</script>
+</body>
+</html>

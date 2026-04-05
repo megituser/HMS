@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HMS | Doctors</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body { background:#f4f7fb; font-family:"Segoe UI",system-ui; }
+        .sidebar {
+            width:260px; min-height:100vh;
+            background:linear-gradient(135deg,#0d6efd,#0a58ca);
+            color:white;
+        }
+        .sidebar a {
+            display:block; padding:12px 20px;
+            color:white; text-decoration:none;
+        }
+        .sidebar a:hover { background:rgba(255,255,255,.15); }
+        .topbar {
+            background:white; padding:15px 30px;
+            border-bottom:1px solid #e3e6ea;
+        }
+        .content { padding:30px; }
+    </style>
+</head>
+
+<body>
+<div class="d-flex">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h4 class="p-3"><i class="bi bi-hospital"></i> HMS Admin</h4>
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="doctors.html">Doctors</a>
+        <a href="patients.html">Patients</a>
+        <a href="#" onclick="logout()" class="text-warning mt-4">Logout</a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="flex-grow-1">
+
+        <!-- TOP BAR -->
+        <div class="topbar d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Doctors</h5>
+            <button class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#doctorModal"
+                    onclick="openAddDoctor()">
+                <i class="bi bi-plus-lg"></i> Add Doctor
+            </button>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Specialization</th>
+                    <th>Phone</th>
+                    <th>Experience</th>
+                    <th>Status</th>
+                    <th width="160">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="doctorTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal fade" id="doctorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add Doctor</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body row g-3">
+                <input type="hidden" id="doctorId">
+
+                <!-- USER SELECTION -->
+                <div class="col-md-12">
+                    <label class="form-label">Doctor Login User</label>
+                    <select class="form-select" id="userId">
+                        <option value="">Select Doctor User</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <input class="form-control" id="firstName" placeholder="First Name">
+                </div>
+
+                <div class="col-md-6">
+                    <input class="form-control" id="lastName" placeholder="Last Name">
+                </div>
+
+                <div class="col-md-6">
+                    <input class="form-control" id="phone" placeholder="Phone">
+                </div>
+
+                <div class="col-md-6">
+                    <input class="form-control" id="email" placeholder="Email">
+                </div>
+
+                <div class="col-md-6">
+                    <input class="form-control" id="specialization" placeholder="Specialization">
+                </div>
+
+                <div class="col-md-6">
+                    <input type="number" class="form-control" id="experienceYears"
+                           placeholder="Experience Years">
+                </div>
+
+                <div class="col-md-12">
+                    <select class="form-select" id="departmentId">
+                        <option value="">Select Department</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" onclick="saveDoctor()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ================= AUTH ================= */
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+if (!token || role !== "ROLE_ADMIN") {
+    location.href = "index.html";
+}
+
+const headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + token
+};
+
+/* ================= LOAD DEPARTMENTS ================= */
+fetch("http://localhost:8080/api/departments", { headers })
+    .then(r => r.json())
+    .then(depts => {
+        departmentId.innerHTML = `<option value="">Select Department</option>`;
+        depts.forEach(d =>
+            departmentId.innerHTML += `<option value="${d.id}">${d.name}</option>`
+        );
+    });
+
+/* ================= LOAD AVAILABLE DOCTOR USERS ================= */
+function loadDoctorUsers() {
+    fetch("http://localhost:8080/api/users/available-doctors", { headers })
+        .then(r => r.json())
+        .then(users => {
+            userId.innerHTML = `<option value="">Select Doctor User</option>`;
+            users.forEach(u =>
+                userId.innerHTML += `<option value="${u.id}">${u.username}</option>`
+            );
+        });
+}
+
+/* ================= LOAD DOCTORS ================= */
+function loadDoctors() {
+    fetch("http://localhost:8080/api/doctors", { headers })
+        .then(r => r.json())
+        .then(data => {
+            doctorTable.innerHTML = "";
+            data.forEach(d => {
+                doctorTable.innerHTML += `
+                    <tr>
+                        <td>${d.firstName} ${d.lastName}</td>
+                        <td>${d.departmentName}</td>
+                        <td>${d.specialization || "-"}</td>
+                        <td>${d.phone}</td>
+                        <td>${d.experienceYears || "-"}</td>
+                        <td>
+                            <span class="badge bg-${d.active ? "success" : "secondary"}">
+                                ${d.active ? "Active" : "Inactive"}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-warning btn-sm"
+                                    onclick='openEditDoctor(${JSON.stringify(d)})'>
+                                Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="deleteDoctor(${d.id})">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        });
+}
+
+loadDoctors();
+
+/* ================= MODAL ================= */
+function openAddDoctor() {
+    modalTitle.innerText = "Add Doctor";
+    doctorId.value = "";
+    firstName.value = "";
+    lastName.value = "";
+    phone.value = "";
+    email.value = "";
+    specialization.value = "";
+    experienceYears.value = "";
+    departmentId.value = "";
+    userId.disabled = false;
+    userId.value = "";
+
+    loadDoctorUsers();
+}
+
+function openEditDoctor(d) {
+    modalTitle.innerText = "Edit Doctor";
+    doctorId.value = d.id;
+    firstName.value = d.firstName;
+    lastName.value = d.lastName;
+    phone.value = d.phone;
+    email.value = d.email || "";
+    specialization.value = d.specialization || "";
+    experienceYears.value = d.experienceYears || "";
+    departmentId.value = d.departmentId;
+
+    userId.disabled = true; // ❌ do not change linked user
+    new bootstrap.Modal(document.getElementById("doctorModal")).show();
+}
+
+/* ================= SAVE ================= */
+function saveDoctor() {
+
+    if (!doctorId.value && !userId.value) {
+        alert("Please select doctor login user");
+        return;
+    }
+
+    const payload = {
+        firstName: firstName.value,
+        lastName: lastName.value,
+        phone: phone.value,
+        email: email.value,
+        specialization: specialization.value,
+        experienceYears: experienceYears.value,
+        departmentId: departmentId.value,
+        userId: userId.value
+    };
+
+    const method = doctorId.value ? "PUT" : "POST";
+    const url = doctorId.value
+        ? `http://localhost:8080/api/doctors/${doctorId.value}`
+        : "http://localhost:8080/api/doctors";
+
+    fetch(url, { method, headers, body: JSON.stringify(payload) })
+        .then(r => {
+            if (!r.ok) throw new Error();
+            location.reload();
+        })
+        .catch(() => alert("Validation failed"));
+}
+
+/* ================= DELETE ================= */
+function deleteDoctor(id) {
+    if (!confirm("Deactivate this doctor?")) return;
+
+    fetch(`http://localhost:8080/api/doctors/${id}`, {
+        method: "DELETE",
+        headers
+    }).then(() => location.reload());
+}
+
+/* ================= LOGOUT ================= */
+function logout() {
+    localStorage.clear();
+    location.href = "index.html";
+}
+</script>
+</body>
+</html>

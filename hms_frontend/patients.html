@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HMS | Patients</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body { background:#f4f7fb; font-family:"Segoe UI",system-ui; }
+        .sidebar { width:260px; min-height:100vh; background:linear-gradient(135deg,#0d6efd,#0a58ca); color:white; }
+        .sidebar a { display:block; padding:12px 20px; color:white; text-decoration:none; }
+        .sidebar a:hover { background:rgba(255,255,255,.15); }
+        .topbar { background:white; padding:15px 30px; border-bottom:1px solid #e3e6ea; }
+        .content { padding:30px; }
+    </style>
+</head>
+
+<body>
+<div class="d-flex">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h4 class="p-3"><i class="bi bi-hospital"></i> HMS</h4>
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="patients.html">Patients</a>
+        <a href="#" onclick="logout()" class="text-warning mt-4">Logout</a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="flex-grow-1">
+
+        <div class="topbar d-flex justify-content-between">
+            <h5>Patients</h5>
+            <button id="addBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#patientModal">
+                + Add Patient
+            </button>
+        </div>
+
+        <div class="content">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>DOB</th>
+                    <th>Phone</th>
+                    <th>Blood Group</th>
+                    <th id="actionHeader" style="display:none;">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="patientTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT PATIENT MODAL -->
+<div class="modal fade" id="patientModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 id="modalTitle">Add Patient</h5>
+            </div>
+
+            <div class="modal-body row g-3">
+                <input type="hidden" id="patientId">
+
+                <div class="col-md-6">
+                    <input class="form-control" id="firstName" placeholder="First Name">
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control" id="lastName" placeholder="Last Name">
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="gender">
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="date" class="form-control" id="dob">
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control" id="phone" placeholder="Phone (10 digits)">
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control" id="email" placeholder="Email">
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control" id="bloodGroup" placeholder="Blood Group">
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control" id="emergencyContact" placeholder="Emergency Contact">
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control" id="address" placeholder="Address">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="savePatient()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const token = localStorage.getItem("token");
+const role  = localStorage.getItem("role");
+
+if (!token) location.href = "index.html";
+
+// Role rules
+if (!(role === "ROLE_DOCTOR" || role === "ROLE_RECEPTIONIST")) {
+    document.getElementById("addBtn").style.display = "none";
+}
+
+if (role === "ROLE_ADMIN") {
+    document.getElementById("actionHeader").style.display = "";
+}
+
+const headers = {
+    "Content-Type":"application/json",
+    "Authorization":"Bearer " + token
+};
+
+// LOAD PATIENTS
+fetch("http://localhost:8080/api/patients",{headers})
+    .then(res=>res.json())
+    .then(data=>{
+        const t=document.getElementById("patientTable");
+        t.innerHTML="";
+        data.forEach(p=>{
+            let actions="";
+            if(role==="ROLE_ADMIN"){
+                actions=`
+                <td>
+                  <button class="btn btn-sm btn-warning" onclick='editPatient(${JSON.stringify(p)})'>Edit</button>
+                  <button class="btn btn-sm btn-danger" onclick='deletePatient(${p.id})'>Delete</button>
+                </td>`;
+            }
+            t.innerHTML+=`
+              <tr>
+                <td>${p.firstName} ${p.lastName}</td>
+                <td>${p.gender}</td>
+                <td>${p.dateOfBirth||""}</td>
+                <td>${p.phone}</td>
+                <td>${p.bloodGroup||""}</td>
+                ${actions}
+              </tr>`;
+        });
+    });
+
+// ADD / UPDATE
+function savePatient(){
+    const id = patientId.value;
+    const method = id ? "PUT" : "POST";
+    const url = id
+        ? `http://localhost:8080/api/patients/${id}`
+        : "http://localhost:8080/api/patients";
+
+    fetch(url,{
+        method,
+        headers,
+        body:JSON.stringify({
+            firstName:firstName.value,
+            lastName:lastName.value,
+            gender:gender.value,
+            dateOfBirth:dob.value,
+            phone:phone.value,
+            email:email.value,
+            address:address.value,
+            bloodGroup:bloodGroup.value,
+            emergencyContact:emergencyContact.value
+        })
+    }).then(()=>location.reload());
+}
+
+// EDIT
+function editPatient(p){
+    modalTitle.innerText="Edit Patient";
+    patientId.value=p.id;
+    firstName.value=p.firstName;
+    lastName.value=p.lastName;
+    gender.value=p.gender;
+    dob.value=p.dateOfBirth||"";
+    phone.value=p.phone;
+    email.value=p.email||"";
+    address.value=p.address||"";
+    bloodGroup.value=p.bloodGroup||"";
+    emergencyContact.value=p.emergencyContact||"";
+    new bootstrap.Modal(document.getElementById("patientModal")).show();
+}
+
+// DELETE (Soft)
+function deletePatient(id){
+    if(!confirm("Deactivate this patient?")) return;
+    fetch(`http://localhost:8080/api/patients/${id}`,{
+        method:"DELETE",
+        headers,
+        body:JSON.stringify({ active:false })
+    }).then(()=>location.reload());
+}
+
+function logout(){
+    localStorage.clear();
+    location.href="index.html";
+}
+</script>
+</body>
+</html>
