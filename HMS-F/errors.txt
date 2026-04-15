@@ -1,0 +1,50 @@
+﻿src/components/ui/select.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/ui/select.tsx(92,4): error TS2315: Type 'Props' is not generic.
+src/features/appointments/components/AppointmentForm.tsx(57,5): error TS2322: Type 'Resolver<{ patientId: unknown; doctorId: unknown; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }, any, { patientId: number; doctorId: number; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }>' is not assignable to type 'Resolver<{ patientId: number; doctorId: number; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }, any, { patientId: number; doctorId: number; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }>'.
+  Types of parameters 'options' and 'options' are incompatible.
+    Type 'ResolverOptions<{ patientId: number; doctorId: number; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }>' is not assignable to type 'ResolverOptions<{ patientId: unknown; doctorId: unknown; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }>'.
+      Type 'unknown' is not assignable to type 'number'.
+src/features/appointments/components/AppointmentForm.tsx(72,34): error TS2345: Argument of type '(data: AppointmentFormData) => void' is not assignable to parameter of type 'SubmitHandler<TFieldValues>'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'TFieldValues' is not assignable to type '{ patientId: number; doctorId: number; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }'.
+      Type 'FieldValues' is missing the following properties from type '{ patientId: number; doctorId: number; appointmentDate: string; appointmentTime: string; notes?: string | undefined; }': patientId, doctorId, appointmentDate, appointmentTime
+src/features/billing/components/CreateInvoiceForm.tsx(42,13): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/features/billing/components/InvoiceDetails.tsx(248,50): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/features/doctors/components/DoctorForm.tsx(64,5): error TS2322: Type 'Resolver<{ firstName: string; lastName: string; phone: string; email: string; specialization: string; experienceYears: unknown; departmentId: unknown; userId: unknown; }, any, { firstName: string; lastName: string; phone: string; ... 4 more ...; userId: number; }>' is not assignable to type 'Resolver<{ firstName: string; lastName: string; phone: string; email: string; specialization: string; experienceYears: number; departmentId: number; userId: number; }, any, { firstName: string; lastName: string; ... 5 more ...; userId: number; }>'.
+  Types of parameters 'options' and 'options' are incompatible.
+    Type 'ResolverOptions<{ firstName: string; lastName: string; phone: string; email: string; specialization: string; experienceYears: number; departmentId: number; userId: number; }>' is not assignable to type 'ResolverOptions<{ firstName: string; lastName: string; phone: string; email: string; specialization: string; experienceYears: unknown; departmentId: unknown; userId: unknown; }>'.
+      Type 'unknown' is not assignable to type 'number'.
+src/features/doctors/components/DoctorForm.tsx(89,34): error TS2345: Argument of type '(data: DoctorFormData) => void' is not assignable to parameter of type 'SubmitHandler<TFieldValues>'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'TFieldValues' is not assignable to type '{ firstName: string; lastName: string; phone: string; email: string; specialization: string; experienceYears: number; departmentId: number; userId: number; }'.
+      Type 'FieldValues' is missing the following properties from type '{ firstName: string; lastName: string; phone: string; email: string; specialization: string; experienceYears: number; departmentId: number; userId: number; }': firstName, lastName, phone, email, and 4 more.
+src/features/doctors/components/DoctorList.tsx(43,1): error TS6133: 'cn' is declared but its value is never read.
+src/features/medical-records/components/MedicalRecordForm.tsx(55,5): error TS2322: Type 'Resolver<{ patientId: unknown; diagnosis: string; notes: string; visitDate: string; visitTime: string; }, any, { patientId: number; diagnosis: string; notes: string; visitDate: string; visitTime: string; }>' is not assignable to type 'Resolver<{ patientId: number; diagnosis: string; notes: string; visitDate: string; visitTime: string; }, any, { patientId: number; diagnosis: string; notes: string; visitDate: string; visitTime: string; }>'.
+  Types of parameters 'options' and 'options' are incompatible.
+    Type 'ResolverOptions<{ patientId: number; diagnosis: string; notes: string; visitDate: string; visitTime: string; }>' is not assignable to type 'ResolverOptions<{ patientId: unknown; diagnosis: string; notes: string; visitDate: string; visitTime: string; }>'.
+      Type 'unknown' is not assignable to type 'number'.
+src/features/medical-records/components/MedicalRecordForm.tsx(75,34): error TS2345: Argument of type '(data: MedicalRecordFormData) => void' is not assignable to parameter of type 'SubmitHandler<TFieldValues>'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'TFieldValues' is not assignable to type '{ patientId: number; diagnosis: string; notes: string; visitDate: string; visitTime: string; }'.
+      Type 'FieldValues' is missing the following properties from type '{ patientId: number; diagnosis: string; notes: string; visitDate: string; visitTime: string; }': patientId, diagnosis, notes, visitDate, visitTime
+src/features/wards/components/AdmissionForm.tsx(11,26): error TS2307: Cannot find module '@/components/ui/textarea' or its corresponding type declarations.
+src/features/wards/components/AdmissionForm.tsx(50,13): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'SetStateAction<string>'.
+      Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/features/wards/components/AdmissionForm.tsx(75,24): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/features/wards/components/DepartmentCard.tsx(11,3): error TS6133: 'Users' is declared but its value is never read.
+src/features/wards/components/DepartmentCard.tsx(13,3): error TS6133: 'ShieldCheck' is declared but its value is never read.
+src/features/wards/components/DepartmentCard.tsx(19,8): error TS2307: Cannot find module '@/components/ui/progress' or its corresponding type declarations.
+src/features/wards/components/WardMap.tsx(10,3): error TS6133: 'ShieldCheck' is declared but its value is never read.
+src/features/wards/components/WardMap.tsx(11,3): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/hooks/useDepartments.ts(22,31): error TS2339: Property 'createDepartment' does not exist on type 'typeof import("D:/HMS/HMS/hms/react-frontend/src/api/departmentAPI")'.
+src/hooks/useDepartments.ts(32,38): error TS2694: Namespace '"D:/HMS/HMS/hms/react-frontend/src/api/departmentAPI"' has no exported member 'DepartmentRequest'.
+src/hooks/useDepartments.ts(33,21): error TS2339: Property 'updateDepartment' does not exist on type 'typeof import("D:/HMS/HMS/hms/react-frontend/src/api/departmentAPI")'.
+src/hooks/useDepartments.ts(44,31): error TS2339: Property 'deleteDepartment' does not exist on type 'typeof import("D:/HMS/HMS/hms/react-frontend/src/api/departmentAPI")'.
