@@ -1,0 +1,2 @@
+ALTER TABLE medical_records
+ADD COLUMN deleted BOOLEAN DEFAULT FALSE;
