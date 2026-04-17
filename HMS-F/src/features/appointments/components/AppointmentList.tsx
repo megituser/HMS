@@ -1,26 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Calendar, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
+import {
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  Clock,
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
@@ -28,15 +28,15 @@ import {
   Search,
   Plus
 } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   useAuthStore,
   useIsAdmin,
   useIsDoctor,
@@ -44,26 +44,35 @@ import {
 } from "@/store/useAuthStore";
 import { StatusBadge } from "@/components/shared/DesignSystem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  useAppointments, 
-  useCompleteAppointment, 
-  useCancelAppointment 
+import {
+  useAppointments,
+  useMyAppointments,
+  useCompleteAppointment,
+  useCancelAppointment
 } from "@/hooks/useAppointments";
 import { Loader2 } from "lucide-react";
 
-interface AppointmentListProps {}
+interface AppointmentListProps { }
 
-export function AppointmentList({}: AppointmentListProps) {
+export function AppointmentList({ }: AppointmentListProps) {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
-  const { data, isLoading, isError, refetch } = useAppointments(page, 10);
-  
-  const { mutate: completeAppointment } = useCompleteAppointment();
-  const { mutate: cancelAppointment } = useCancelAppointment();
 
   const isAdmin = useIsAdmin();
   const isDoctor = useIsDoctor();
   const isReceptionist = useIsReceptionist();
+
+  // Doctor sees only their own appointments via /appointments/my
+  const { data: allData, isLoading: allLoading, isError: allError, refetch: allRefetch } = useAppointments(page, 10);
+  const { data: myData, isLoading: myLoading, isError: myError, refetch: myRefetch } = useMyAppointments();
+
+  const { mutate: completeAppointment } = useCompleteAppointment();
+  const { mutate: cancelAppointment } = useCancelAppointment();
+
+  // Select data source based on role
+  const isLoading = isDoctor ? myLoading : allLoading;
+  const isError = isDoctor ? myError : allError;
+  const refetch = isDoctor ? myRefetch : allRefetch;
 
 
   const getStatusVariant = (status: string): "info" | "success" | "destructive" | "default" => {
@@ -90,7 +99,11 @@ export function AppointmentList({}: AppointmentListProps) {
     </div>
   );
 
-  const items = data?.data?.content ?? [];
+  // Doctor: myData is Appointment[] directly; Admin/Receptionist: paginated response
+  const pageData = (allData as any)?.data;
+  const items = isDoctor
+    ? (Array.isArray(myData) ? myData : [])
+    : (pageData?.content ?? []);
 
   if (!isLoading && items.length === 0) return (
     <div className="text-center text-muted-foreground p-8 font-medium">
@@ -114,7 +127,7 @@ export function AppointmentList({}: AppointmentListProps) {
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Toolbar */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
@@ -147,37 +160,62 @@ export function AppointmentList({}: AppointmentListProps) {
             </TableHeader>
             <TableBody>
               {items.map((appt: any) => (
-                  <TableRow key={appt.id} className="group transition-colors">
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span>{appt.patientName}</span>
-                        <span className="text-xs text-muted-foreground font-normal">ID: #{appt.patientId}</span>
+                <TableRow key={appt.id} className="group transition-colors">
+                  <TableCell className="font-medium">
+                    <div className="flex flex-col">
+                      <span>{appt.patientName}</span>
+                      <span className="text-xs text-muted-foreground font-normal">ID: #{appt.patientId}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">Dr. {appt.doctorName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col text-sm">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Calendar className="h-3.5 w-3.5 text-primary/60" />
+                        {new Date(appt.appointmentDate).toLocaleDateString()}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                         <span className="text-sm">Dr. {appt.doctorName}</span>
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" />
+                        {appt.appointmentTime.substring(0, 5)}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col text-sm">
-                        <div className="flex items-center gap-1.5 font-medium">
-                          <Calendar className="h-3.5 w-3.5 text-primary/60" />
-                          {new Date(appt.appointmentDate).toLocaleDateString()}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          {appt.appointmentTime.substring(0, 5)}
-                        </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge variant={getStatusVariant(appt.status)}>
+                      {appt.status}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {isDoctor ? (
+                      <div className="flex justify-end items-center">
+                        {(appt.status === "SCHEDULED" || appt.status === "BOOKED") ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-success border-success/30 hover:bg-success/10 hover:text-success"
+                            onClick={() => completeAppointment(appt.id)}
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-1.5" /> Complete
+                          </Button>
+                        ) : appt.status === "COMPLETED" ? (
+                          <span className="flex items-center text-sm text-success font-medium">
+                            <CheckCircle2 className="h-4 w-4 mr-1.5" /> Completed
+                          </span>
+                        ) : appt.status === "CANCELLED" ? (
+                          <span className="flex items-center text-sm text-destructive font-medium">
+                            <XCircle className="h-4 w-4 mr-1.5" /> Cancelled
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">Archived</span>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge variant={getStatusVariant(appt.status)}>
-                        {appt.status}
-                      </StatusBadge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {appt.status === "SCHEDULED" ? (
+                    ) : (
+                      /* Admin and Receptionist actions */
+                      (appt.status === "SCHEDULED" || appt.status === "BOOKED") ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             render={
@@ -186,47 +224,48 @@ export function AppointmentList({}: AppointmentListProps) {
                               </Button>
                             }
                           />
-                          <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                          <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-smooth">
                             <DropdownMenuLabel>Manage Appointment</DropdownMenuLabel>
-                            {(isAdmin || isDoctor) && (
-                              <DropdownMenuItem 
+                            {isAdmin && (
+                              <DropdownMenuItem
                                 onClick={() => completeAppointment(appt.id)}
                                 className="gap-2 text-success focus:bg-success/10 focus:text-success"
                               >
                                 <CheckCircle2 className="h-4 w-4" /> Mark Completed
                               </DropdownMenuItem>
                             )}
-                            {(isAdmin || isReceptionist) && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    if (confirm("Cancel this appointment?")) cancelAppointment(appt.id);
-                                  }}
-                                  className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                >
-                                  <XCircle className="h-4 w-4" /> Cancel Booking
-                                </DropdownMenuItem>
-                              </>
-                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (confirm("Cancel this appointment?")) cancelAppointment(appt.id);
+                              }}
+                              className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            >
+                              <XCircle className="h-4 w-4" /> Cancel Booking
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+                      ) : appt.status === "COMPLETED" ? (
+                        <span className="text-xs text-success font-medium italic px-2">Completed</span>
+                      ) : appt.status === "CANCELLED" ? (
+                        <span className="text-xs text-destructive font-medium italic px-2">Cancelled</span>
                       ) : (
                         <span className="text-xs text-muted-foreground italic px-2">Archived</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+                      )
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
               }
             </TableBody>
           </Table>
         </div>
 
-        {/* Pagination */}
-        {!isLoading && data?.data && data.data.totalPages > 1 && (
+        {/* Pagination — only for Admin/Receptionist paginated view */}
+        {!isDoctor && !isLoading && pageData && pageData.totalPages > 1 && (
           <div className="flex items-center justify-between py-2">
             <p className="text-xs text-muted-foreground">
-              Total Recorded: <span className="font-medium">{data.data.totalElements}</span>
+              Total Recorded: <span className="font-medium">{pageData.totalElements}</span>
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -241,8 +280,8 @@ export function AppointmentList({}: AppointmentListProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.min(data.data.totalPages - 1, p + 1))}
-                disabled={page === data.data.totalPages - 1}
+                onClick={() => setPage((p) => Math.min(pageData.totalPages - 1, p + 1))}
+                disabled={page === pageData.totalPages - 1}
                 className="h-8 w-8 p-0"
               >
                 <ChevronRight className="h-4 w-4" />

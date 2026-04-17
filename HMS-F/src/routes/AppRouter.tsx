@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { ReceptionistDashboard } from "@/features/receptionist/pages/ReceptionistDashboard";
+import { DoctorDashboard } from "@/features/doctors/pages/DoctorDashboard";
+import { DoctorProfilePage } from "@/features/doctors/pages/DoctorProfilePage";
 import { LoginPage } from "@/pages/LoginPage";
 import { UnauthorizedPage } from "@/pages/UnauthorizedPage";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
@@ -42,7 +44,8 @@ function RoleDashboard() {
   const role = useAuthStore((s) => s.role);
 
   if (role === "ROLE_RECEPTIONIST") return <ReceptionistDashboard />;
-  // ROLE_ADMIN, ROLE_DOCTOR, and others use the default dashboard
+  if (role === "ROLE_DOCTOR") return <DoctorDashboard />;
+  // ROLE_ADMIN and others use the default dashboard
   return <DashboardPage />;
 }
 
@@ -52,6 +55,7 @@ export function AppRouter() {
   const allRoles = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST', 'ROLE_ACCOUNTANT'];
   const adminDoctorStaff = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST'];
   const adminDoctor = ['ROLE_ADMIN', 'ROLE_DOCTOR'];
+  const adminReceptionist = ['ROLE_ADMIN', 'ROLE_RECEPTIONIST'];
   // FIX: billing uses RECEPTIONIST not ACCOUNTANT — must match SecurityConfig
   const billingRoles = ['ROLE_ADMIN', 'ROLE_RECEPTIONIST'];
 
@@ -110,7 +114,7 @@ export function AppRouter() {
               otherwise /doctors/me is caught by /doctors/:id and never matches */}
           <Route path="doctors/me" element={
             <ProtectedRoute allowedRoles={['ROLE_DOCTOR']}>
-              <PlaceholderPage title="My Professional Profile" />
+              <DoctorProfilePage />
             </ProtectedRoute>
           } />
           {/* FIX: RECEPTIONIST needs to see doctors list to book appointments */}
@@ -150,21 +154,21 @@ export function AppRouter() {
           {/* ── Departments ───────────────────────────────────────────────── */}
           {/* All clinical staff can view — only ADMIN can manage (enforced by backend) */}
           <Route path="departments" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={adminReceptionist}>
               <DepartmentsPage />
             </ProtectedRoute>
           } />
 
           {/* ── Rooms & Beds ──────────────────────────────────────────────── */}
           <Route path="rooms" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={adminReceptionist}>
               <RoomsPage />
             </ProtectedRoute>
           } />
 
           {/* ── Admissions ────────────────────────────────────────────────── */}
           <Route path="admissions" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={adminReceptionist}>
               <AdmissionsPage />
             </ProtectedRoute>
           } />

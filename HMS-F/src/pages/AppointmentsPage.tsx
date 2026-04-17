@@ -10,27 +10,42 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { AppointmentList } from "@/features/appointments/components/AppointmentList";
-import { useAppointments } from "@/hooks/useAppointments";
+import { useAppointments, useMyAppointments } from "@/hooks/useAppointments";
+import { useIsDoctor } from "@/store/useAuthStore";
 
 export function AppointmentsPage() {
-  // Fetch first page to derive real stats
-  const { data: appointmentsData } = useAppointments(0, 100);
+  const isDoctor = useIsDoctor();
+
+  // Doctor uses /appointments/my; Admin/Receptionist uses paginated /appointments
+  const { data: allData } = useAppointments(0, 100);
+  const { data: myData } = useMyAppointments();
 
   const stats = useMemo(() => {
-    const page = (appointmentsData as any)?.data;
-    const items: any[] = page?.content ?? [];
-    const total = page?.totalElements ?? 0;
+    let items: any[] = [];
+    let total = 0;
+
+    if (isDoctor) {
+      items = Array.isArray(myData) ? myData : [];
+      total = items.length;
+    } else {
+      const page = (allData as any)?.data;
+      items = page?.content ?? [];
+      total = page?.totalElements ?? 0;
+    }
+
     const scheduled = items.filter((a: any) => a.status === "SCHEDULED" || a.status === "BOOKED").length;
     const completed = items.filter((a: any) => a.status === "COMPLETED").length;
     const cancelled = items.filter((a: any) => a.status === "CANCELLED").length;
     return { total, scheduled, completed, cancelled };
-  }, [appointmentsData]);
+  }, [allData, myData, isDoctor]);
 
   return (
     <div className="space-y-8 pb-10">
       <PageHeader
-        title="Consultations"
-        description="Daily schedule and hospital consultation management."
+        title={isDoctor ? "My Consultations" : "Consultations"}
+        description={isDoctor 
+          ? "Your personal appointment schedule and consultation history." 
+          : "Daily schedule and hospital consultation management."}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -38,7 +53,7 @@ export function AppointmentsPage() {
           title="Total Appointments"
           value={stats.total.toLocaleString()}
           icon={<CalendarDays className="h-5 w-5" />}
-          description="all-time records"
+          description={isDoctor ? "your records" : "all-time records"}
         />
         <StatCard
           title="Scheduled"

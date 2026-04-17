@@ -132,60 +132,19 @@ export function AppSidebar() {
 
                 {/* Medical Records: Admin, Doctor */}
                 {(isAdmin || isDoctor) && (
-                  <>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        render={<Link to="/medical-records" />}
-                        isActive={isActive("/medical-records")}
-                        tooltip="Medical Records"
-                      >
-                        <Activity />
-                        <span>Medical Records</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    
-                    {isDoctor && (
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          render={<Link to="/medical-records/my" />}
-                          isActive={isActive("/medical-records/my")}
-                          tooltip="My Patient Records"
-                        >
-                          <ClipboardList />
-                          <span>My Records</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )}
-                  </>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        <SidebarSeparator />
-
-        {/* Management Section (Doctors, Departments, Hospital) */}
-        {(isAdmin || isReceptionist || isDoctor) && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Management</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {/* Doctors List: Admin, Receptionist */}
-                {(isAdmin || isReceptionist) && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      render={<Link to="/doctors" />}
-                      isActive={isActive("/doctors")}
-                      tooltip="Doctors"
+                      render={<Link to="/medical-records" />}
+                      isActive={isActive("/medical-records")}
+                      tooltip="Medical Records"
                     >
-                      <Stethoscope />
-                      <span>Doctors</span>
+                      <Activity />
+                      <span>Medical Records</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
 
-                {/* My Profile: Doctor only */}
+                {/* My Profile: Doctor only — quick access in clinical section */}
                 {isDoctor && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
@@ -198,6 +157,30 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        <SidebarSeparator />
+
+        {/* Management Section (Doctors, Departments, Hospital) — Admin/Receptionist only */}
+        {(isAdmin || isReceptionist) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {/* Doctors List: Admin, Receptionist */}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    render={<Link to="/doctors" />}
+                    isActive={isActive("/doctors")}
+                    tooltip="Doctors"
+                  >
+                    <Stethoscope />
+                    <span>Doctors</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
 
                 {/* Departments: Admin only */}
                 {isAdmin && (
@@ -214,30 +197,26 @@ export function AppSidebar() {
                 )}
 
                 {/* Hospital (Rooms/Admissions): Admin, Receptionist */}
-                {(isAdmin || isReceptionist) && (
-                  <>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        render={<Link to="/rooms" />}
-                        isActive={isActive("/rooms")}
-                        tooltip="Rooms & Beds"
-                      >
-                        <BedDouble />
-                        <span>Rooms & Beds</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        render={<Link to="/admissions" />}
-                        isActive={isActive("/admissions")}
-                        tooltip="Admissions"
-                      >
-                        <ClipboardList />
-                        <span>Admissions</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </>
-                )}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    render={<Link to="/rooms" />}
+                    isActive={isActive("/rooms")}
+                    tooltip="Rooms & Beds"
+                  >
+                    <BedDouble />
+                    <span>Rooms & Beds</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    render={<Link to="/admissions" />}
+                    isActive={isActive("/admissions")}
+                    tooltip="Admissions"
+                  >
+                    <ClipboardList />
+                    <span>Admissions</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

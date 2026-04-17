@@ -21,9 +21,11 @@ import {
   useCreateRecord,
   useMedicalRecords,
 } from "@/hooks/useMedicalRecords";
+import { useIsDoctor } from "@/store/useAuthStore";
 
 export function MedicalRecordsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const isDoctor = useIsDoctor();
   
   const { mutate: createRecord, isPending: isCreating } = useCreateRecord();
   const { data: records } = useMedicalRecords();
@@ -49,8 +51,10 @@ export function MedicalRecordsPage() {
   return (
     <div className="space-y-8 pb-10">
       <PageHeader
-        title="Patient Medical History"
-        description="Clinical documentation, diagnoses, and treatment records."
+        title={isDoctor ? "My Patient Records" : "Patient Medical History"}
+        description={isDoctor
+          ? "Your documented patient diagnoses and treatment records."
+          : "Clinical documentation, diagnoses, and treatment records."}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

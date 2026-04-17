@@ -3,6 +3,7 @@
 // from the hook (Spring Page object) — no more .data.content double-wrap
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow
@@ -15,14 +16,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Search, MoreHorizontal, UserPlus, ChevronLeft,
-  ChevronRight, Filter, Eye, Pencil, Trash2
+  ChevronRight, Filter, Eye, Pencil, Trash2, ClipboardPlus
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
   DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
-import { useIsAdmin, useIsReceptionist } from "@/store/useAuthStore";
+import { useIsAdmin, useIsReceptionist, useIsDoctor } from "@/store/useAuthStore";
 import { StatusBadge } from "@/components/shared/DesignSystem";
 import { cn } from "@/lib/utils";
 import { usePatients } from "@/hooks/usePatients";
@@ -39,11 +40,13 @@ export function PatientList({
 }: PatientListProps) {
   const [page, setPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   // data = Spring Page: { content: [], totalPages, totalElements }
   const { data, isLoading, isError, refetch } = usePatients(page, 10);
   const isAdmin = useIsAdmin();
   const isReceptionist = useIsReceptionist();
+  const isDoctor = useIsDoctor();
 
   if (isLoading) return (
     <div className="flex justify-center items-center h-64">
@@ -145,7 +148,7 @@ export function PatientList({
                           </Button>
                         }
                       />
-                      <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-smooth">
+                      <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-smooth">
                         <DropdownMenuGroup>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => onViewPatient(patient.id)} className="gap-2 focus:bg-primary/10">
@@ -154,6 +157,14 @@ export function PatientList({
                           {(isAdmin || isReceptionist) && (
                             <DropdownMenuItem onClick={() => onEditPatient(patient.id)} className="gap-2 focus:bg-primary/10">
                               <Pencil className="h-4 w-4" /> Edit Profile
+                            </DropdownMenuItem>
+                          )}
+                          {isDoctor && (
+                            <DropdownMenuItem
+                              onClick={() => navigate('/medical-records')}
+                              className="gap-2 focus:bg-primary/10"
+                            >
+                              <ClipboardPlus className="h-4 w-4" /> Add Medical Record
                             </DropdownMenuItem>
                           )}
                           {isAdmin && (

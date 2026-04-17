@@ -18,7 +18,6 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     Optional<Doctor> findByUserUsername(String username);
 
-
     boolean existsByPhone(String phone);
 
     // ✅ ADMIN & RECEPTIONIST → ALL doctors with department

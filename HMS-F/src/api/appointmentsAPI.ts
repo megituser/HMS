@@ -44,7 +44,12 @@ export const getAppointmentsByDoctor = async (doctorId: number): Promise<Appoint
 
 export const getMyAppointments = async (): Promise<Appointment[]> => {
   const res = await api.get('/appointments/my')
-  return res.data;
+  const data = res.data;
+  // Defensively unwrap: backend may return [], { content: [] }, or { data: [] }
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.content)) return data.content;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
 }
 
 export const getAllAppointmentsAdmin = async (): Promise<Appointment[]> => {

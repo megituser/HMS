@@ -26,6 +26,7 @@ import {
   usePatients,
 } from "@/hooks/usePatients";
 import { useCurrentAdmissions } from "@/hooks/useWards";
+import { useIsDoctor } from "@/store/useAuthStore";
 
 export function PatientsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -37,6 +38,8 @@ export function PatientsPage() {
   const { mutate: createPatient, isPending: isCreating } = useCreatePatient();
   const { mutate: updatePatient, isPending: isUpdating } = useUpdatePatient();
   const { mutate: deactivatePatient } = useDeactivatePatient();
+
+  const isDoctor = useIsDoctor();
 
   // Fetch patients and admissions for real stats
   const { data: patientsData } = usePatients(0, 100);
@@ -76,8 +79,10 @@ export function PatientsPage() {
   return (
     <div className="space-y-8 pb-10">
       <PageHeader
-        title="Patients"
-        description="Complete management system for patient records and admissions."
+        title={isDoctor ? "My Patients" : "Patients"}
+        description={isDoctor
+          ? "Patients you are currently treating or have treated."
+          : "Complete management system for patient records and admissions."}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -120,27 +125,29 @@ export function PatientsPage() {
         />
       </div>
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-          <SheetHeader className="mb-6">
-            <SheetTitle className="text-2xl font-bold">
-              {editingPatientId ? "Update Patient Profile" : "New Patient Registration"}
-            </SheetTitle>
-            <SheetDescription>
-              {editingPatientId
-                ? "Modify the existing patient record below."
-                : "Fill in the details to create a new patient record."}
-            </SheetDescription>
-          </SheetHeader>
+      {!isDoctor && (
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="text-2xl font-bold">
+                {editingPatientId ? "Update Patient Profile" : "New Patient Registration"}
+              </SheetTitle>
+              <SheetDescription>
+                {editingPatientId
+                  ? "Modify the existing patient record below."
+                  : "Fill in the details to create a new patient record."}
+              </SheetDescription>
+            </SheetHeader>
 
-          <PatientForm
-            initialData={editingPatient}
-            onSubmit={handleFormSubmit}
-            isLoading={isCreating || isUpdating}
-            onCancel={() => setIsSheetOpen(false)}
-          />
-        </SheetContent>
-      </Sheet>
+            <PatientForm
+              initialData={editingPatient}
+              onSubmit={handleFormSubmit}
+              isLoading={isCreating || isUpdating}
+              onCancel={() => setIsSheetOpen(false)}
+            />
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

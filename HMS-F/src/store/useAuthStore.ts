@@ -5,6 +5,7 @@ interface AuthState {
   token: string | null;
   refreshToken: string | null;
   role: string | null;
+  userId: number | null;
   user: { username: string } | null;
   isAuthenticated: boolean;
   login: (data: { accessToken: string; refreshToken: string; username: string }) => void;
@@ -56,6 +57,26 @@ const decodeRole = (token: string): string | null => {
 };
 
 /**
+ * Extracts the user/subject ID from the JWT payload.
+ * Checks common claim names: userId, user_id, id, sub (numeric).
+ */
+const decodeUserId = (token: string): number | null => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    // Try common claim names for user ID
+    const rawId = payload.userId ?? payload.user_id ?? payload.id ?? null;
+    if (typeof rawId === 'number') return rawId;
+    if (typeof rawId === 'string' && /^\d+$/.test(rawId)) return parseInt(rawId, 10);
+    // If sub is numeric, use it as user ID
+    if (typeof payload.sub === 'number') return payload.sub;
+    if (typeof payload.sub === 'string' && /^\d+$/.test(payload.sub)) return parseInt(payload.sub, 10);
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Returns true if the JWT is expired or cannot be parsed.
  * Use this before making sensitive API calls.
  */
@@ -75,15 +96,18 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       refreshToken: null,
       role: null,
+      userId: null,
       user: null,
       isAuthenticated: false,
 
       login: (data) => {
         const role = decodeRole(data.accessToken);
+        const userId = decodeUserId(data.accessToken);
         set({
           token: data.accessToken,
           refreshToken: data.refreshToken,
           role,
+          userId,
           // role is NOT duplicated in user — use state.role as single source of truth
           user: { username: data.username },
           isAuthenticated: true,
@@ -95,6 +119,7 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           refreshToken: null,
           role: null,
+          userId: null,
           user: null,
           isAuthenticated: false,
         }),
@@ -123,4 +148,5 @@ export const useIsDoctor = () => useAuthStore((s) => s.role === 'ROLE_DOCTOR');
 export const useIsReceptionist = () => useAuthStore((s) => s.role === 'ROLE_RECEPTIONIST');
 export const useIsAccountant = () => useAuthStore((s) => s.role === 'ROLE_ACCOUNTANT');
 export const useUserRole = () => useAuthStore((s) => s.role);
+export const useUserId = () => useAuthStore((s) => s.userId);
 export const useUsername = () => useAuthStore((s) => s.user?.username ?? null);
