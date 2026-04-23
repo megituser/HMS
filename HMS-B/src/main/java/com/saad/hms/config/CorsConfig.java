@@ -20,7 +20,7 @@ public class CorsConfig {
                 "http://127.0.0.1:5500",
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "https://your-frontend-domain.com"
+                "https://hms-frontend-lime-one.vercel.app"
         ));
 
         // 👇 HTTP methods allowed
