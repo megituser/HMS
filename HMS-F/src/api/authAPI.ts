@@ -13,10 +13,10 @@ export interface AuthResponse {
 }
 
 export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
-  const { data } = await api.post<AuthResponse>('/auth/login', credentials);
+  const { data } = await api.post<AuthResponse>('/api/auth/login', credentials);
   return data;
 };
 
 export const logout = async (): Promise<void> => {
-  await api.post('/auth/logout');
+  await api.post('/api/auth/logout');
 };
