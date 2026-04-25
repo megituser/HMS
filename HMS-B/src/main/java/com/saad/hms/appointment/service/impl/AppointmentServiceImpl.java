@@ -11,8 +11,6 @@ import com.saad.hms.exception.ForbiddenException;
 import com.saad.hms.exception.ResourceNotFoundException;
 import com.saad.hms.patient.entity.Patient;
 import com.saad.hms.patient.repository.PatientRepository;
-import com.saad.hms.user.entity.User;
-import com.saad.hms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +30,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
-    private final UserRepository userRepository;
 
     @Override
     public AppointmentResponseDTO createAppointment(AppointmentRequestDTO request) {
@@ -134,14 +131,16 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
 
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        if (!appt.getDoctor().getUser().getUsername().equals(username)) {
+        if (!isAdmin && !appt.getDoctor().getUser().getUsername().equals(username)) {
             throw new ForbiddenException("You can only complete your own appointments");
         }
 
-        log.info("Completing appointment with id: {} by doctor: {}", id, username);
+        log.info("Completing appointment with id: {} by user: {}", id, username);
 
         appt.setStatus("COMPLETED");
         appointmentRepository.save(appt);
@@ -157,11 +156,12 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         log.debug("Fetching appointments for logged-in doctor: {}", username);
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Doctor doctor = doctorRepository.findByUserUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Doctor profile not found for user: " + username));
 
-        Doctor doctor = doctorRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
+        log.debug("Resolved doctor id: {} (name: {} {}) for username: {}",
+                doctor.getId(), doctor.getFirstName(), doctor.getLastName(), username);
 
         return appointmentRepository.findByDoctorIdAndActiveTrue(doctor.getId())
                 .stream()
@@ -175,14 +175,13 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
 
-        if (!appointment.isActive()) {
+        if ("CANCELLED".equals(appointment.getStatus())) {
             throw new BadRequestException("Appointment already cancelled");
         }
 
         log.info("Cancelling appointment with id: {}", id);
 
         appointment.setStatus("CANCELLED");
-        appointment.setActive(false);
         appointmentRepository.save(appointment);
 
         log.info("Appointment cancelled successfully with id: {}", id);

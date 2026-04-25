@@ -36,7 +36,8 @@ import {
   DropdownMenuItem, 
   DropdownMenuLabel, 
   DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
 import { useUsers, useUpdateUser } from "@/hooks/useUsers";
 import { StatusBadge } from "@/components/shared/DesignSystem";
@@ -175,28 +176,32 @@ export function UserList({ onAddUser, onEditUser }: UserListProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
                       <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-smooth border-muted-foreground/10">
-                        <DropdownMenuLabel>Manage Account</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onEditUser(user.id)} className="gap-2 focus:bg-primary/10">
-                          <Pencil className="h-4 w-4 text-muted-foreground" />
-                          Modify Privileges
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => handleToggleStatus(user)}
-                          className={cn(
-                            "gap-2",
-                            user.enabled ? "text-destructive focus:bg-destructive/10" : "text-success focus:bg-success/10"
-                          )}
-                        >
-                          <Power className="h-4 w-4" />
-                          {user.enabled ? "Deactivate Account" : "Reactivate Account"}
-                        </DropdownMenuItem>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>Manage Account</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => onEditUser(user.id)} className="gap-2 focus:bg-primary/10">
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                            Modify Privileges
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => handleToggleStatus(user)}
+                            className={cn(
+                              "gap-2",
+                              user.enabled ? "text-destructive focus:bg-destructive/10" : "text-success focus:bg-success/10"
+                            )}
+                          >
+                            <Power className="h-4 w-4" />
+                            {user.enabled ? "Deactivate Account" : "Reactivate Account"}
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

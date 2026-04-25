@@ -31,6 +31,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -64,7 +65,7 @@ export function AppointmentList({ }: AppointmentListProps) {
 
   // Doctor sees only their own appointments via /appointments/my
   const { data: allData, isLoading: allLoading, isError: allError, refetch: allRefetch } = useAppointments(page, 10);
-  const { data: myData, isLoading: myLoading, isError: myError, refetch: myRefetch } = useMyAppointments();
+  const { data: myData, isLoading: myLoading, isError: myError, refetch: myRefetch } = useMyAppointments(isDoctor);
 
   const { mutate: completeAppointment } = useCompleteAppointment();
   const { mutate: cancelAppointment } = useCancelAppointment();
@@ -100,7 +101,7 @@ export function AppointmentList({ }: AppointmentListProps) {
   );
 
   // Doctor: myData is Appointment[] directly; Admin/Receptionist: paginated response
-  const pageData = (allData as any)?.data;
+  const pageData = allData as any;
   const items = isDoctor
     ? (Array.isArray(myData) ? myData : [])
     : (pageData?.content ?? []);
@@ -193,14 +194,26 @@ export function AppointmentList({ }: AppointmentListProps) {
                     {isDoctor ? (
                       <div className="flex justify-end items-center">
                         {(appt.status === "SCHEDULED" || appt.status === "BOOKED") ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-success border-success/30 hover:bg-success/10 hover:text-success"
-                            onClick={() => completeAppointment(appt.id)}
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1.5" /> Complete
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-success border-success/30 hover:bg-success/10 hover:text-success"
+                              onClick={() => completeAppointment(appt.id)}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1.5" /> Complete
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => {
+                                if (confirm("Cancel this appointment?")) cancelAppointment(appt.id);
+                              }}
+                            >
+                              <XCircle className="h-4 w-4 mr-1.5" /> Cancel
+                            </Button>
+                          </div>
                         ) : appt.status === "COMPLETED" ? (
                           <span className="flex items-center text-sm text-success font-medium">
                             <CheckCircle2 className="h-4 w-4 mr-1.5" /> Completed
@@ -225,24 +238,26 @@ export function AppointmentList({ }: AppointmentListProps) {
                             }
                           />
                           <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-smooth">
-                            <DropdownMenuLabel>Manage Appointment</DropdownMenuLabel>
-                            {isAdmin && (
+                            <DropdownMenuGroup>
+                              <DropdownMenuLabel>Manage Appointment</DropdownMenuLabel>
+                              {isAdmin && (
+                                <DropdownMenuItem
+                                  onClick={() => completeAppointment(appt.id)}
+                                  className="gap-2 text-success focus:bg-success/10 focus:text-success"
+                                >
+                                  <CheckCircle2 className="h-4 w-4" /> Mark Completed
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                onClick={() => completeAppointment(appt.id)}
-                                className="gap-2 text-success focus:bg-success/10 focus:text-success"
+                                onClick={() => {
+                                  if (confirm("Cancel this appointment?")) cancelAppointment(appt.id);
+                                }}
+                                className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                               >
-                                <CheckCircle2 className="h-4 w-4" /> Mark Completed
+                                <XCircle className="h-4 w-4" /> Cancel Booking
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                if (confirm("Cancel this appointment?")) cancelAppointment(appt.id);
-                              }}
-                              className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
-                            >
-                              <XCircle className="h-4 w-4" /> Cancel Booking
-                            </DropdownMenuItem>
+                            </DropdownMenuGroup>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : appt.status === "COMPLETED" ? (

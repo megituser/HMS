@@ -53,7 +53,7 @@ public class AppointmentController {
 
     // ✅ COMPLETE
     @PutMapping("/{id}/complete")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
     public ResponseEntity<Void> complete(
             @PathVariable @Positive(message = "ID must be positive") Long id) {
 

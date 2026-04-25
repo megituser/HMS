@@ -22,6 +22,7 @@ public class CorsConfig {
                 "http://localhost:3000",
                 "https://hms-frontend-lime-one.vercel.app",
                 "https://hms-dun-phi.vercel.app"
+
         ));
 
         // 👇 HTTP methods allowed

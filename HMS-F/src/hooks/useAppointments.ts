@@ -1,18 +1,19 @@
-import { useQuery, useMutation, useQueryClient } 
+import { useQuery, useMutation, useQueryClient }
   from '@tanstack/react-query'
 import * as api from '../api/appointmentsAPI'
 import toast from 'react-hot-toast'
 
-export const useAppointments = (page=0, size=10) =>
-  useQuery({ 
+export const useAppointments = (page = 0, size = 10) =>
+  useQuery({
     queryKey: ['appointments', page, size],
     queryFn: () => api.getAllAppointments(page, size)
   })
 
-export const useMyAppointments = () =>
+export const useMyAppointments = (enabled = true) =>
   useQuery({
     queryKey: ['appointments', 'my'],
-    queryFn: api.getMyAppointments
+    queryFn: api.getMyAppointments,
+    enabled,
   })
 
 export const useCreateAppointment = () => {
@@ -23,7 +24,17 @@ export const useCreateAppointment = () => {
       qc.invalidateQueries({ queryKey: ['appointments'] })
       toast.success('Appointment booked')
     },
-    onError: () => toast.error('Failed to book appointment')
+    onError: (error: any) => {
+      const data = error.response?.data;
+      if (data?.errors) {
+        // Handle Spring Boot validation errors map
+        const messages = Object.values(data.errors).join(', ');
+        toast.error(`Validation failed: ${messages}`);
+      } else {
+        const msg = data?.message || data?.error || 'Failed to book appointment';
+        toast.error(msg);
+      }
+    }
   })
 }
 

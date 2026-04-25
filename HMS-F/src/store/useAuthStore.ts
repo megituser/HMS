@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { queryClient } from '@/providers/QueryProvider';
 
 interface AuthState {
   token: string | null;
@@ -101,6 +102,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: (data) => {
+        queryClient.clear();  // Wipe previous user's cached data
         const role = decodeRole(data.accessToken);
         const userId = decodeUserId(data.accessToken);
         set({
@@ -114,7 +116,8 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      logout: () =>
+      logout: () => {
+        queryClient.clear();  // Wipe cached data from this session
         set({
           token: null,
           refreshToken: null,
@@ -122,7 +125,8 @@ export const useAuthStore = create<AuthState>()(
           userId: null,
           user: null,
           isAuthenticated: false,
-        }),
+        });
+      },
 
       setToken: (token, refreshToken) => {
         const role = decodeRole(token);

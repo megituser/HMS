@@ -103,7 +103,7 @@ public class SecurityConfig {
                                                 .hasRole("DOCTOR")
                                                 // All clinical staff can view appointments
                                                 .requestMatchers(GET, "/api/appointments/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE")
+                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE", "ACCOUNTANT")
                                                 // ADMIN, DOCTOR and RECEPTIONIST can book appointments
                                                 .requestMatchers(POST, "/api/appointments/**")
                                                 .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST")

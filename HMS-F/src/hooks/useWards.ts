@@ -145,7 +145,7 @@ export const useUpdateBedStatus = () => {
 export const useAdmissions = (page = 0, size = 10) =>
   useQuery({
     queryKey: ['admissions', page, size],
-    queryFn: () => api.getAllAdmissions(page, size),
+    queryFn: () => api.getAdmissions(page, size),
   });
 
 export const useCurrentAdmissions = () =>

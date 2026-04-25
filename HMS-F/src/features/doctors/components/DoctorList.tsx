@@ -82,7 +82,7 @@ export function DoctorList({
     </div>
   );
 
-  const items = data?.content ?? [];
+  const items = (data?.content ?? []).filter((doctor: any) => doctor.active);
 
   if (!isLoading && items.length === 0) return (
     <div className="text-center text-muted-foreground p-8">

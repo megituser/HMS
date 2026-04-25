@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { 
-  PageHeader, 
-  StatCard 
+import {
+  PageHeader,
+  StatCard
 } from "@/components/shared/DesignSystem";
-import { 
-  Calendar, 
-  CheckCircle2, 
+import {
+  Calendar,
+  CheckCircle2,
   XCircle,
   CalendarDays,
 } from "lucide-react";
@@ -18,7 +18,7 @@ export function AppointmentsPage() {
 
   // Doctor uses /appointments/my; Admin/Receptionist uses paginated /appointments
   const { data: allData } = useAppointments(0, 100);
-  const { data: myData } = useMyAppointments();
+  const { data: myData } = useMyAppointments(isDoctor);
 
   const stats = useMemo(() => {
     let items: any[] = [];
@@ -28,9 +28,8 @@ export function AppointmentsPage() {
       items = Array.isArray(myData) ? myData : [];
       total = items.length;
     } else {
-      const page = (allData as any)?.data;
-      items = page?.content ?? [];
-      total = page?.totalElements ?? 0;
+      items = (allData as any)?.content ?? [];
+      total = (allData as any)?.totalElements ?? 0;
     }
 
     const scheduled = items.filter((a: any) => a.status === "SCHEDULED" || a.status === "BOOKED").length;
@@ -43,8 +42,8 @@ export function AppointmentsPage() {
     <div className="space-y-8 pb-10">
       <PageHeader
         title={isDoctor ? "My Consultations" : "Consultations"}
-        description={isDoctor 
-          ? "Your personal appointment schedule and consultation history." 
+        description={isDoctor
+          ? "Your personal appointment schedule and consultation history."
           : "Daily schedule and hospital consultation management."}
       />
 

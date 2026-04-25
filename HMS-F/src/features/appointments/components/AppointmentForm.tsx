@@ -69,7 +69,7 @@ export function AppointmentForm({
   } = useForm<AppointmentFormInput, unknown, AppointmentFormOutput>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      appointmentDate: new Date().toISOString().split('T')[0],
+      appointmentDate: new Date().toLocaleDateString('en-CA'),
       appointmentTime: "09:00",
     },
   });
@@ -109,7 +109,7 @@ export function AppointmentForm({
                   <SelectValue placeholder={isLoadingPatients ? "Loading patients..." : "Select Patient"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {(patientsData?.data?.content ?? []).map((patient: any) => (
+                  {((patientsData as any)?.content ?? (patientsData as any)?.data?.content ?? []).map((patient: any) => (
                     <SelectItem key={patient.id} value={patient.id.toString()}>
                       {patient.firstName} {patient.lastName}
                     </SelectItem>
@@ -139,7 +139,7 @@ export function AppointmentForm({
                   <SelectValue placeholder={isLoadingDoctors ? "Loading doctors..." : "Select Doctor"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {(doctorsData?.data?.content ?? []).map((doctor: any) => (
+                  {((doctorsData as any)?.data?.content ?? (doctorsData as any)?.content ?? []).map((doctor: any) => (
                     <SelectItem key={doctor.id} value={doctor.id.toString()}>
                       Dr. {doctor.firstName} {doctor.lastName} ({doctor.specialization})
                     </SelectItem>
@@ -159,7 +159,7 @@ export function AppointmentForm({
           <Input
             id="appointmentDate"
             type="date"
-            min={new Date().toISOString().split('T')[0]}
+            min={new Date().toLocaleDateString('en-CA')}
             {...register("appointmentDate")}
             className={cn(errors.appointmentDate && "border-destructive")}
           />

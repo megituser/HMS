@@ -33,8 +33,8 @@ export function MedicalRecordsPage() {
   const stats = useMemo(() => {
     const items: any[] = Array.isArray(records) ? records : [];
     const total = items.length;
-    const uniquePatients = new Set(items.map((r: any) => r.patientId).filter(Boolean)).size;
-    const uniqueDoctors = new Set(items.map((r: any) => r.doctorId).filter(Boolean)).size;
+    const uniquePatients = new Set(items.map((r: any) => r.patientName).filter(Boolean)).size;
+    const uniqueDoctors = new Set(items.map((r: any) => r.doctorName).filter(Boolean)).size;
     return { total, uniquePatients, uniqueDoctors };
   }, [records]);
 

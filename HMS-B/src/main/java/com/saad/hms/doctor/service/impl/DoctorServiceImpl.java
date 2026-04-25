@@ -78,8 +78,8 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public Page<DoctorResponseDTO> getAllDoctors(Pageable pageable) {
-        log.debug("Fetching active doctors - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        return doctorRepository.findByActiveTrue(pageable)
+        log.debug("Fetching all doctors - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        return doctorRepository.findAll(pageable)
                 .map(this::mapToResponse);
     }
 
@@ -187,11 +187,9 @@ public class DoctorServiceImpl implements DoctorService {
                 .experienceYears(doctor.getExperienceYears())
                 .active(doctor.isActive())
                 .departmentId(
-                        doctor.getDepartment() != null ? doctor.getDepartment().getId() : null
-                )
+                        doctor.getDepartment() != null ? doctor.getDepartment().getId() : null)
                 .departmentName(
-                        doctor.getDepartment() != null ? doctor.getDepartment().getName() : "-"
-                )
+                        doctor.getDepartment() != null ? doctor.getDepartment().getName() : "-")
                 .build();
     }
 }

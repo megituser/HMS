@@ -34,8 +34,9 @@ export const useAddInvoiceItem = () => {
       id: number,
       data: { description: string, amount: number }
     }) => api.addInvoiceItem(id, data),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: ['invoices'] })
+      qc.invalidateQueries({ queryKey: ['invoice', variables.id] })
       toast.success('Item added')
     }
   })
@@ -48,8 +49,9 @@ export const useRecordPayment = () => {
       id: number,
       data: { amount: number, method: string }
     }) => api.recordPayment(id, data),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: ['invoices'] })
+      qc.invalidateQueries({ queryKey: ['invoice', variables.id] })
       toast.success('Payment recorded')
     }
   })

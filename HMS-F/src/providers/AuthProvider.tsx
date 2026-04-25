@@ -8,7 +8,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: {
     username: string;
-    role: string;
   } | null;
   role: string | null;
   login: (data: AuthResponse) => void;

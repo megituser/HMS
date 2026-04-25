@@ -1,8 +1,7 @@
-import { Bell, Search, PanelLeft } from "lucide-react";
+import { Search, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,51 +79,7 @@ export function TopNavbar() {
         {/* Theme Toggle */}
         <ThemeToggle />
 
-        {/* Notifications */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg" />
-            }
-          >
-            <Bell className="h-4 w-4" />
-            <Badge
-              variant="destructive"
-              className="absolute -right-0.5 -top-0.5 h-4 w-4 rounded-full p-0 text-[10px] flex items-center justify-center"
-            >
-              3
-            </Badge>
-            <span className="sr-only">Notifications</span>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="font-semibold">
-              Notifications
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-              <span className="text-sm font-medium">New appointment booked</span>
-              <span className="text-xs text-muted-foreground">
-                Dr. Smith has a new appointment at 3:00 PM
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-              <span className="text-sm font-medium">Patient check-in</span>
-              <span className="text-xs text-muted-foreground">
-                John Doe has checked in for appointment
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
-              <span className="text-sm font-medium">Lab results ready</span>
-              <span className="text-xs text-muted-foreground">
-                Blood work results for Patient #1042
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-center text-sm text-primary justify-center">
-              View all notifications
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+
 
         {/* User Avatar (mobile shortcut) */}
         <DropdownMenu>

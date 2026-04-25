@@ -66,11 +66,11 @@ export function HelpPage() {
             <CardContent className="space-y-4 text-sm">
               <div className="flex items-center gap-3">
                 <Mail className="size-4 text-muted-foreground" />
-                <span>support@hmspro.com</span>
+                <span>hmspro@gmail.com</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="size-4 text-muted-foreground" />
-                <span>+1 (555) 123-4567</span>
+                <span>2589631470</span>
               </div>
               <Button onClick={handleTicketSubmit} className="w-full mt-2" variant="outline">
                 <LifeBuoy className="mr-2 size-4" />

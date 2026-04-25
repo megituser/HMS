@@ -54,7 +54,7 @@ export function PatientForm({
     defaultValues: initialData ? {
       firstName: initialData.firstName || "",
       lastName: initialData.lastName || "",
-      gender: initialData.gender || "MALE",
+      gender: (initialData.gender?.toUpperCase() as "MALE" | "FEMALE" | "OTHER") || "MALE",
       dateOfBirth: initialData.dateOfBirth || "",
       phone: initialData.phone || "",
       email: initialData.email || "",
