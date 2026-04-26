@@ -170,8 +170,8 @@ export function DashboardPage() {
                           variant={
                             apt.status === "COMPLETED" ? "success"
                               : apt.status === "SCHEDULED" || apt.status === "BOOKED" ? "info"
-                              : apt.status === "CANCELLED" ? "destructive"
-                              : "warning"
+                                : apt.status === "CANCELLED" ? "destructive"
+                                  : "warning"
                           }
                         >
                           {apt.status || "—"}

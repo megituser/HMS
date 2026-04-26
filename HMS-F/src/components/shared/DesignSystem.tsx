@@ -61,7 +61,7 @@ interface DataCardProps {
 
 export function DataCard({ title, description, badge, children, className, noPadding = false }: DataCardProps) {
   return (
-    <div className={cn("rounded-xl border bg-card shadow-sm", className)}>
+    <div className={cn("rounded-xl border bg-card shadow-sm transition-all duration-300 hover:border-primary/30 hover:shadow-md hover:shadow-primary/10", className)}>
       <div className="flex items-center justify-between border-b px-6 py-4">
         <div>
           <h2 className="text-lg font-semibold">{title}</h2>
@@ -86,6 +86,7 @@ interface StatCardProps {
   icon: React.ReactNode;
   description?: string;
   tooltip?: string;
+  colorVariant?: "default" | "primary" | "info" | "success" | "warning";
   className?: string;
 }
 
@@ -99,14 +100,18 @@ export function StatCard({
   icon,
   description,
   tooltip,
+  colorVariant = "default",
   className
 }: StatCardProps) {
+  const isFilled = colorVariant !== "default";
+
   const changeElement = (
     <span className={cn(
       "inline-flex items-center gap-0.5 text-xs font-medium cursor-help",
-      changeType === "positive" && "text-success",
-      changeType === "negative" && "text-destructive",
-      changeType === "neutral" && "text-muted-foreground",
+      !isFilled && changeType === "positive" && "text-success",
+      !isFilled && changeType === "negative" && "text-destructive",
+      !isFilled && changeType === "neutral" && "text-muted-foreground",
+      isFilled && "text-white bg-white/20 px-1.5 py-0.5 rounded-sm"
     )}>
       {changeType === "positive" && "↑"}
       {changeType === "negative" && "↓"}
@@ -114,14 +119,31 @@ export function StatCard({
     </span>
   );
 
+  const bgStyles = {
+    default: "bg-card text-card-foreground hover:bg-primary/[0.06] hover:border-primary/30",
+    primary: "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-primary/20",
+    info: "bg-gradient-to-br from-info to-info/80 text-info-foreground border-info/20",
+    success: "bg-gradient-to-br from-success to-success/80 text-success-foreground border-success/20",
+    warning: "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground border-warning/20",
+  };
+
+  const iconBgStyles = {
+    default: "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground",
+    primary: "bg-white/20 text-white group-hover:bg-white/30",
+    info: "bg-white/20 text-white group-hover:bg-white/30",
+    success: "bg-white/20 text-white group-hover:bg-white/30",
+    warning: "bg-white/20 text-white group-hover:bg-white/30",
+  };
+
   return (
     <div className={cn(
-      "group relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5",
+      "group relative overflow-hidden rounded-xl border p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-primary/10 hover:-translate-y-0.5",
+      bgStyles[colorVariant],
       className
     )}>
       <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <div className="space-y-2 relative z-10">
+          <p className={cn("text-sm font-medium", isFilled ? "text-white/80" : "text-muted-foreground")}>{title}</p>
           <p className="text-3xl font-bold tracking-tight">{value}</p>
           <div className="flex items-center gap-1.5">
             {tooltip ? (
@@ -136,14 +158,20 @@ export function StatCard({
                 </Tooltip>
               </TooltipProvider>
             ) : changeElement}
-            <span className="text-xs text-muted-foreground">{description}</span>
+            <span className={cn("text-xs", isFilled ? "text-white/70" : "text-muted-foreground")}>{description}</span>
           </div>
         </div>
-        <div className="rounded-lg bg-primary/10 p-2.5 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+        <div className={cn("rounded-lg p-2.5 transition-colors relative z-10", iconBgStyles[colorVariant])}>
           {icon}
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-primary/60 via-primary/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+      {/* Decorative background element for filled cards */}
+      {isFilled && (
+        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors" />
+      )}
+      {!isFilled && (
+        <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-primary/60 via-primary/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+      )}
     </div>
   );
 }

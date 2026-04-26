@@ -23,7 +23,7 @@
   --popover-foreground: oklch(0.15 0.015 260);
 
   /* ── Brand Primary (Indigo 600) ───────────────────────── */
-  --primary: oklch(0.48 0.2 264);
+  --primary: oklch(0.55 0.22 264);
   --primary-foreground: oklch(0.98 0.005 260);
 
   /* ── Secondary (Slate tint) ───────────────────────────── */
@@ -67,11 +67,11 @@
   --sidebar-ring: oklch(0.48 0.2 264);
 
   /* ── Semantic Status Colors (accessible via utility) ──── */
-  --success: oklch(0.60 0.18 145);
+  --success: oklch(0.62 0.18 145);
   --success-foreground: oklch(0.98 0.01 145);
-  --warning: oklch(0.75 0.16 65);
-  --warning-foreground: oklch(0.25 0.05 65);
-  --info: oklch(0.60 0.17 240);
+  --warning: oklch(0.70 0.18 45);
+  --warning-foreground: oklch(0.25 0.05 45);
+  --info: oklch(0.62 0.18 240);
   --info-foreground: oklch(0.98 0.01 240);
 }
 
@@ -87,7 +87,7 @@
   --popover-foreground: oklch(0.93 0.008 260);
 
   /* ── Brand Primary (Indigo 400 for dark) ──────────────── */
-  --primary: oklch(0.65 0.22 264);
+  --primary: oklch(0.70 0.20 264);
   --primary-foreground: oklch(0.13 0.015 260);
 
   /* ── Secondary ────────────────────────────────────────── */
@@ -128,11 +128,11 @@
   --sidebar-ring: oklch(0.65 0.22 264);
 
   /* ── Semantic ─────────────────────────────────────────── */
-  --success: oklch(0.70 0.17 145);
+  --success: oklch(0.75 0.16 145);
   --success-foreground: oklch(0.15 0.03 145);
-  --warning: oklch(0.80 0.14 65);
-  --warning-foreground: oklch(0.20 0.04 65);
-  --info: oklch(0.70 0.15 240);
+  --warning: oklch(0.75 0.16 45);
+  --warning-foreground: oklch(0.20 0.04 45);
+  --info: oklch(0.75 0.16 240);
   --info-foreground: oklch(0.15 0.03 240);
 }
 
@@ -209,15 +209,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
+    background-color: var(--background);
+    background-image:
+      radial-gradient(at 0% 0%, oklch(0.65 0.2 264 / 8%) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, oklch(0.65 0.2 240 / 8%) 0px, transparent 50%);
+    background-attachment: fixed;
   }
+
   html {
     @apply font-sans scroll-smooth;
   }
 
   /* ── Typography Scale ───────────────────────────────── */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading tracking-tight text-foreground;
   }
 
@@ -232,10 +244,12 @@
    ═══════════════════════════════════════════════════════════ */
 
 @layer utilities {
+
   /* ── Scrollbar hide ─────────────────────────────────── */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -248,18 +262,22 @@
 
   /* ── Gradient shimmer ───────────────────────────────── */
   .shimmer {
-    background: linear-gradient(
-      110deg,
-      transparent 33%,
-      oklch(1 0 0 / 8%) 50%,
-      transparent 67%
-    );
+    background: linear-gradient(110deg,
+        transparent 33%,
+        oklch(1 0 0 / 8%) 50%,
+        transparent 67%);
     background-size: 300% 100%;
     animation: shimmer 2s infinite linear;
   }
+
   @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
   }
 
   /* ── Gradient text ──────────────────────────────────── */
@@ -272,7 +290,124 @@
   .glow-sm {
     box-shadow: 0 0 15px -3px oklch(0.55 0.2 264 / 25%);
   }
+
   .glow-md {
     box-shadow: 0 0 30px -5px oklch(0.55 0.2 264 / 30%);
   }
+
+  /* ── Shadow smooth ─────────────────────────────────── */
+  .shadow-smooth {
+    box-shadow: 0 4px 24px -4px oklch(0 0 0 / 8%), 0 1px 4px oklch(0 0 0 / 4%);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 20px -4px var(--primary);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Theme Blue Hover System — Unified hover treatment
+   Every interactive element transitions to the primary
+   blue/indigo theme color on hover for a cohesive feel.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Table Rows ─────────────────────────────────────────── */
+[data-slot="table-body"] [data-slot="table-row"] {
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+[data-slot="table-body"] [data-slot="table-row"]:hover {
+  background-color: oklch(from var(--primary) l c h / 8%) !important;
+  border-left-color: var(--primary);
+  box-shadow: inset 0 0 0 0.5px oklch(from var(--primary) l c h / 12%);
+}
+
+.dark [data-slot="table-body"] [data-slot="table-row"]:hover {
+  background-color: oklch(from var(--primary) l c h / 12%) !important;
+}
+
+/* ── Cards — subtle border glow on hover ────────────────── */
+[data-slot="card"] {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+[data-slot="card"]:hover {
+  border-color: oklch(from var(--primary) l c h / 30%);
+  box-shadow: 0 0 20px -6px oklch(from var(--primary) l c h / 15%),
+    0 4px 16px -4px oklch(0 0 0 / 6%);
+}
+
+.dark [data-slot="card"]:hover {
+  border-color: oklch(from var(--primary) l c h / 40%);
+  box-shadow: 0 0 24px -6px oklch(from var(--primary) l c h / 20%),
+    0 4px 16px -4px oklch(0 0 0 / 15%);
+}
+
+/* ── DataCard (design system) inner border-b header ─────── */
+.rounded-xl.border.bg-card {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.rounded-xl.border.bg-card:hover {
+  border-color: oklch(from var(--primary) l c h / 25%);
+  box-shadow: 0 0 18px -5px oklch(from var(--primary) l c h / 12%);
+}
+
+/* ── Buttons — outline & ghost get blue hover ───────────── */
+[data-slot="button"]:not([disabled]):hover {
+  box-shadow: 0 0 0 1px oklch(from var(--primary) l c h / 15%);
+}
+
+/* ── Dropdown menu items ────────────────────────────────── */
+[data-slot="dropdown-menu-item"] {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+[data-slot="dropdown-menu-item"]:hover,
+[data-slot="dropdown-menu-item"][data-highlighted] {
+  background-color: oklch(from var(--primary) l c h / 10%) !important;
+  color: var(--primary) !important;
+}
+
+.dark [data-slot="dropdown-menu-item"]:hover,
+.dark [data-slot="dropdown-menu-item"][data-highlighted] {
+  background-color: oklch(from var(--primary) l c h / 15%) !important;
+}
+
+/* ── Sidebar menu items ─────────────────────────────────── */
+[data-slot="sidebar-menu-button"]:not([data-active="true"]) {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+[data-slot="sidebar-menu-button"]:not([data-active="true"]):hover {
+  background-color: oklch(from var(--primary) l c h / 10%) !important;
+  color: var(--primary) !important;
+}
+
+.dark [data-slot="sidebar-menu-button"]:not([data-active="true"]):hover {
+  background-color: oklch(from var(--primary) l c h / 15%) !important;
+}
+
+/* ── List items inside DataCards (admission rows etc.) ──── */
+.divide-y>div {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.divide-y>div:hover {
+  background-color: oklch(from var(--primary) l c h / 6%);
+  border-left-color: var(--primary);
+}
+
+.dark .divide-y>div:hover {
+  background-color: oklch(from var(--primary) l c h / 10%);
+}
+
+/* ── Input focus ring — theme blue ──────────────────────── */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: oklch(from var(--primary) l c h / 50%) !important;
+  box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 12%) !important;
 }
