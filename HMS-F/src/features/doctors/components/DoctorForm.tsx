@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { type Doctor, type DoctorRequest } from "@/api/doctorsAPI";
 import { useDepartments } from "@/hooks/useWards";
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers, useAvailableDoctors } from "@/hooks/useUsers";
 import { cn } from "@/lib/utils";
 
 const doctorSchema = z.object({
@@ -68,12 +69,14 @@ export function DoctorForm({
 }: DoctorFormProps) {
   // ── All hooks MUST be declared before any conditional returns ──────────────
   const { data: departmentsRaw, isLoading: isLoadingDepts } = useDepartments();
-  const { data: usersRaw, isLoading: isLoadingUsers } = useUsers();
+  const { data: allUsersRaw, isLoading: isLoadingUsers } = useUsers(0, 100);
+  const { data: availableUsersRaw, isLoading: isLoadingAvailableUsers } = useAvailableDoctors();
 
   const {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm<DoctorFormInput, unknown, DoctorFormOutput>({
     resolver: zodResolver(doctorSchema),
@@ -85,7 +88,7 @@ export function DoctorForm({
       specialization: initialData.specialization || "",
       experienceYears: initialData.experienceYears ?? 0,
       departmentId: initialData.departmentId ?? 0,
-      userId: 0,
+      userId: initialData.userId ?? 0,
     } : {
       firstName: "",
       lastName: "",
@@ -98,32 +101,48 @@ export function DoctorForm({
     },
   });
 
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        firstName: initialData.firstName,
+        lastName: initialData.lastName,
+        phone: initialData.phone || "",
+        email: initialData.email || "",
+        specialization: initialData.specialization || "",
+        experienceYears: initialData.experienceYears ?? 0,
+        departmentId: initialData.departmentId ?? 0,
+        userId: initialData.userId ?? 0,
+      });
+    } else {
+      reset({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        specialization: "",
+        experienceYears: 0,
+        departmentId: 0,
+        userId: 0,
+      });
+    }
+  }, [initialData, reset]);
+
   // ── Extract arrays from whatever shape the API returns ─────────────────────
-  // Handles all possible shapes:
-  //   - axios response:  { data: { content: [...] } }  → .data.content
-  //   - Spring Page:     { content: [...] }             → .content
-  //   - plain array:     [...]                          → direct
   const extractArray = (raw: any): any[] => {
     if (!raw) return [];
-    // axios response wrapper: { data: ... }
     const inner = raw?.data ?? raw;
-    // Spring Page object: { content: [...] }
     if (Array.isArray(inner?.content)) return inner.content;
-    // Plain array
     if (Array.isArray(inner)) return inner;
     return [];
   };
 
   const departmentsList = extractArray(departmentsRaw);
-  const usersList = extractArray(usersRaw);
+  const allUsersList = extractArray(allUsersRaw);
+  const availableUsersList = extractArray(availableUsersRaw);
 
-  // ── Debug log (remove after confirming dropdowns populate) ─────────────────
-  if (import.meta.env.DEV) {
-    console.log('[DoctorForm] departmentsRaw:', departmentsRaw);
-    console.log('[DoctorForm] departmentsList:', departmentsList);
-    console.log('[DoctorForm] usersRaw:', usersRaw);
-    console.log('[DoctorForm] usersList:', usersList);
-  }
+  const usersListToDisplay = initialData
+    ? allUsersList.filter(u => u.role === 'ROLE_DOCTOR' || u.role === 'DOCTOR')
+    : availableUsersList;
 
   // ── Conditional returns AFTER all hooks ────────────────────────────────────
   if (isLoadingDepts || isLoadingUsers) {
@@ -305,12 +324,7 @@ export function DoctorForm({
                   <SelectValue placeholder="Link User Account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {usersList
-                    .filter((u) =>
-                      u.role === 'ROLE_DOCTOR' ||
-                      u.role === 'DOCTOR' ||
-                      !initialData
-                    )
+                  {usersListToDisplay
                     .map((user) => (
                       <SelectItem key={user.id} value={String(user.id)}>
                         {user.username} ({user.email})

@@ -29,6 +29,7 @@ public class DataInitializer implements CommandLineRunner {
         createRole("ROLE_DOCTOR");
         createRole("ROLE_RECEPTIONIST");
         createRole("ROLE_ACCOUNTANT");
+        createRole("ROLE_NURSE");
 
         if (userRepo.findByUsername("admin").isEmpty()) {
 
@@ -65,12 +66,12 @@ public class DataInitializer implements CommandLineRunner {
             cardiology.setName("Cardiology");
             cardiology.setDescription("Heart and cardiovascular system");
             departmentRepo.save(cardiology);
-            
+
             Department neurology = new Department();
             neurology.setName("Neurology");
             neurology.setDescription("Brain and nervous system");
             departmentRepo.save(neurology);
-            
+
             log.info("Initialized default departments.");
         }
     }

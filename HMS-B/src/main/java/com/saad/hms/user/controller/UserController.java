@@ -56,11 +56,30 @@ public class UserController {
             dto.setUsername(u.getUsername());
             dto.setEmail(u.getEmail());
             dto.setRole(u.getRole().getName());
-            dto.setEnabled(u.isEnabled());
+            dto.setEnabled(u.getEnabled() != null ? u.getEnabled() : false);
             return dto;
         });
 
         return ResponseEntity.ok(dtoPage);
+    }
+
+    // ✅ GET AVAILABLE DOCTOR USERS
+    @GetMapping("/available-doctors")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    public ResponseEntity<List<UserResponseDTO>> getAvailableDoctorUsers() {
+        List<User> availableUsers = userRepository.findAvailableDoctorUsers();
+
+        List<UserResponseDTO> dtos = availableUsers.stream().map(u -> {
+            UserResponseDTO dto = new UserResponseDTO();
+            dto.setId(u.getId());
+            dto.setUsername(u.getUsername());
+            dto.setEmail(u.getEmail());
+            dto.setRole(u.getRole().getName());
+            dto.setEnabled(u.getEnabled() != null ? u.getEnabled() : false);
+            return dto;
+        }).toList();
+
+        return ResponseEntity.ok(dtos);
     }
 
     // ✅ UPDATE USER

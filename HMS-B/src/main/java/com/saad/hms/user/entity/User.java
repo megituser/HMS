@@ -1,4 +1,5 @@
 package com.saad.hms.user.entity;
+
 import com.saad.hms.doctor.entity.Doctor;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,7 +31,8 @@ public class User {
 
     private String phone;
 
-    private boolean enabled = true;
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private Boolean enabled = true;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
@@ -38,7 +40,6 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private Doctor doctor;
-
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -14,6 +14,7 @@ export interface Room {
 export interface Bed {
   id: number;
   bedNumber: string;
+  bedType: string;
   status: BedStatus;
   roomId: number;
 }

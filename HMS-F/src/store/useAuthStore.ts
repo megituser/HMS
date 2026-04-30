@@ -151,6 +151,7 @@ export const useIsAdmin = () => useAuthStore((s) => s.role === 'ROLE_ADMIN');
 export const useIsDoctor = () => useAuthStore((s) => s.role === 'ROLE_DOCTOR');
 export const useIsReceptionist = () => useAuthStore((s) => s.role === 'ROLE_RECEPTIONIST');
 export const useIsAccountant = () => useAuthStore((s) => s.role === 'ROLE_ACCOUNTANT');
+export const useIsNurse = () => useAuthStore((s) => s.role === 'ROLE_NURSE');
 export const useUserRole = () => useAuthStore((s) => s.role);
 export const useUserId = () => useAuthStore((s) => s.userId);
 export const useUsername = () => useAuthStore((s) => s.user?.username ?? null);

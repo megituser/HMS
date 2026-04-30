@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setUsername(request.getUsername() != null ? request.getUsername().trim() : null);
         user.setPassword(encoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         user.setRole(role);

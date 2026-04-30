@@ -46,13 +46,15 @@ export default function RoomsPage() {
   const isReceptionist = role === "ROLE_RECEPTIONIST";
   const isDoctor = role === "ROLE_DOCTOR";
   const isAccountant = role === "ROLE_ACCOUNTANT";
+  const isNurse = role === "ROLE_NURSE";
 
   // Redirect Accountants
   if (isAccountant) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  const canManage = isAdmin || isReceptionist;
+  const canManageRoom = isAdmin || isReceptionist;
+  const canManageBeds = isAdmin || isReceptionist || isNurse;
 
   const [searchParams] = useSearchParams();
   const isAdmitAction = searchParams.get("action") === "admit";
@@ -76,11 +78,11 @@ export default function RoomsPage() {
   const handleBedClick = (bed: Bed, admission?: Admission) => {
     setActiveBed(bed);
     if (bed.status === "AVAILABLE") {
-      if (!canManage) return;
+      if (!canManageBeds) return;
       setIsAdmitOpen(true);
     } else if (bed.status === "OCCUPIED" && admission) {
       setActiveAdmission(admission);
-      if (!canManage) return;
+      if (!canManageBeds) return;
       setIsDischargeOpen(true);
     }
   };
@@ -123,7 +125,7 @@ export default function RoomsPage() {
             </Button>
           ) : (
             <>
-              {canManage && (
+              {canManageRoom && (
                 <Button size="sm" className="gap-2 shadow-glow" onClick={() => setIsAddRoomOpen(true)}>
                   <Plus className="h-4 w-4" /> Add Room
                 </Button>
@@ -202,7 +204,8 @@ export default function RoomsPage() {
                     }}
                     onAddBed={handleAddBed}
                     admissionMap={admissionMap}
-                    canManage={canManage}
+                    canManageBeds={canManageBeds}
+                    canManageRoom={canManageRoom}
                   />
                 ))}
               </div>
@@ -230,7 +233,7 @@ export default function RoomsPage() {
                 <div className="bg-card p-6 rounded-xl border shadow-sm">
                   <div className="flex items-center justify-between mb-8">
                     <h3 className="text-lg font-semibold">Bed Distribution</h3>
-                    {!canManage && (
+                    {!canManageBeds && (
                       <Badge variant="outline" className="text-amber-600 bg-amber-50">
                         Read Only Profile
                       </Badge>
@@ -241,7 +244,7 @@ export default function RoomsPage() {
                     beds={bedsData || []}
                     admissionMap={admissionMap}
                     onBedClick={handleBedClick}
-                    canManage={canManage}
+                    canManage={canManageBeds}
                   />
 
                   <div className="mt-8 flex flex-wrap gap-6 pt-6 border-t text-sm">

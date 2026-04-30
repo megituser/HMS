@@ -5,6 +5,10 @@ import {
   Building2,
   BedDouble,
   Activity,
+  Receipt,
+  CreditCard,
+  DollarSign,
+  Clock
 } from "lucide-react";
 import {
   PageHeader,
@@ -17,10 +21,12 @@ import {
 import { useDashboard } from "@/hooks/useDashboard";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useCurrentAdmissions, useRooms } from "@/hooks/useWards";
+import { useIsAccountant } from "@/store/useAuthStore";
+import { useInvoices } from "@/hooks/useBilling";
 
 // ─── Dashboard Page ───────────────────────────────────────
 
-export function DashboardPage() {
+function AdminClinicalDashboard() {
   const { data: statsResponse, isLoading, isError, refetch } = useDashboard();
   const stats = statsResponse?.data;
 
@@ -278,4 +284,140 @@ export function DashboardPage() {
       </div>
     </div>
   );
+}
+
+function AccountantDashboard() {
+  const { data: invoicesData, isLoading, isError } = useInvoices();
+
+  if (isLoading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+        <p className="text-sm text-muted-foreground animate-pulse">Loading finance dashboard…</p>
+      </div>
+    </div>
+  );
+
+  if (isError) return (
+    <div className="text-center text-destructive p-8 bg-destructive/5 rounded-xl border border-destructive/10">
+      <p>Failed to load finance statistics.</p>
+    </div>
+  );
+
+  const invoices = Array.isArray(invoicesData?.data) ? invoicesData.data : (Array.isArray(invoicesData) ? invoicesData : []);
+
+  const totalInvoices = invoices.length;
+  const paidInvoices = invoices.filter((i: any) => i.status === 'PAID');
+  const pendingInvoices = invoices.filter((i: any) => i.status === 'PENDING');
+  
+  const totalRevenue = paidInvoices.reduce((sum: number, i: any) => sum + (i.totalAmount || 0), 0);
+  const pendingRevenue = pendingInvoices.reduce((sum: number, i: any) => sum + (i.totalAmount || 0), 0);
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        title="Finance Dashboard"
+        description="Overview of hospital billing and revenue."
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Total Revenue"
+          value={`$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          icon={<DollarSign className="h-5 w-5" />}
+          description="from paid invoices"
+        />
+        <StatCard
+          title="Pending Payments"
+          value={`$${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          icon={<Clock className="h-5 w-5" />}
+          description="outstanding amount"
+        />
+        <StatCard
+          title="Total Invoices"
+          value={totalInvoices.toString()}
+          icon={<Receipt className="h-5 w-5" />}
+          description="generated to date"
+        />
+        <StatCard
+          title="Paid Invoices"
+          value={paidInvoices.length.toString()}
+          icon={<CreditCard className="h-5 w-5" />}
+          description="successfully settled"
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-7">
+        <DataCard
+          title="Recent Invoices"
+          description="Latest billing activity"
+          noPadding
+          className="lg:col-span-4"
+        >
+          {invoices.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Invoice ID</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Patient</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Amount</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {invoices.slice(0, 5).map((inv: any) => (
+                    <tr key={inv.id} className="transition-colors hover:bg-muted/30">
+                      <td className="px-4 py-3 font-medium">#{inv.id}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{inv.patientName || `Patient #${inv.patientId}`}</td>
+                      <td className="px-4 py-3 font-medium">${(inv.totalAmount || 0).toFixed(2)}</td>
+                      <td className="px-4 py-3">
+                        <StatusBadge
+                          variant={inv.status === "PAID" ? "success" : inv.status === "CANCELLED" ? "destructive" : "warning"}
+                        >
+                          {inv.status || "PENDING"}
+                        </StatusBadge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Receipt className="h-8 w-8 text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">No invoices found</p>
+            </div>
+          )}
+        </DataCard>
+
+        <div className="lg:col-span-3 space-y-6">
+           <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-success/10 p-2.5">
+                <Activity className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Finance System</p>
+                <p className="text-xs text-muted-foreground">All systems operational</p>
+              </div>
+              <StatusBadge variant="success" pulse className="ml-auto">
+                Online
+              </StatusBadge>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DashboardPage() {
+  const isAccountant = useIsAccountant();
+
+  if (isAccountant) {
+    return <AccountantDashboard />;
+  }
+
+  return <AdminClinicalDashboard />;
 }

@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
   DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
-import { useIsAdmin, useIsReceptionist, useIsDoctor } from "@/store/useAuthStore";
+import { useIsAdmin, useIsReceptionist, useIsDoctor, useIsNurse } from "@/store/useAuthStore";
 import { StatusBadge } from "@/components/shared/DesignSystem";
 import { cn } from "@/lib/utils";
 import { usePatients } from "@/hooks/usePatients";
@@ -47,6 +47,7 @@ export function PatientList({
   const isAdmin = useIsAdmin();
   const isReceptionist = useIsReceptionist();
   const isDoctor = useIsDoctor();
+  const isNurse = useIsNurse();
 
   if (isLoading) return (
     <div className="flex justify-center items-center h-64">
@@ -154,7 +155,7 @@ export function PatientList({
                           <DropdownMenuItem onClick={() => onViewPatient(patient.id)} className="gap-2 focus:bg-primary/10">
                             <Eye className="h-4 w-4" /> View Details
                           </DropdownMenuItem>
-                          {(isAdmin || isReceptionist) && (
+                          {(isAdmin || isReceptionist || isNurse) && (
                             <DropdownMenuItem onClick={() => onEditPatient(patient.id)} className="gap-2 focus:bg-primary/10">
                               <Pencil className="h-4 w-4" /> Edit Profile
                             </DropdownMenuItem>

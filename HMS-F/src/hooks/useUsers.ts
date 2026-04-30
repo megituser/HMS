@@ -9,6 +9,12 @@ export const useUsers = (page = 0, size = 10) =>
     queryFn: () => api.getAllUsers(page, size)
   })
 
+export const useAvailableDoctors = () =>
+  useQuery({
+    queryKey: ['available-doctors'],
+    queryFn: () => api.getAvailableDoctorUsers()
+  })
+
 export const useCreateUser = () => {
   const qc = useQueryClient()
   return useMutation({

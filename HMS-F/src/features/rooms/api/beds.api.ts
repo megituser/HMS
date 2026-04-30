@@ -23,3 +23,7 @@ export const createBed = async (data: Partial<Bed>): Promise<Bed> => {
   const response = await api.post("/beds", data);
   return response.data;
 };
+
+export const deleteBed = async (id: number): Promise<void> => {
+  await api.delete(`/beds/${id}`);
+};

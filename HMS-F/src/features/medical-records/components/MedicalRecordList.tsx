@@ -11,7 +11,7 @@ import {
   FileText, Trash2, Calendar, Clock,
   Search, Plus, Stethoscope
 } from "lucide-react";
-import { useIsAdmin, useIsDoctor } from "@/store/useAuthStore";
+import { useIsAdmin, useIsDoctor, useIsNurse } from "@/store/useAuthStore";
 import { useMedicalRecords, useDeleteRecord } from "@/hooks/useMedicalRecords";
 
 interface MedicalRecordListProps {
@@ -24,6 +24,7 @@ export function MedicalRecordList({ onAddRecord }: MedicalRecordListProps) {
   const { mutate: deleteRecord } = useDeleteRecord();
   const isAdmin = useIsAdmin();
   const isDoctor = useIsDoctor();
+  const isNurse = useIsNurse();
 
   if (isLoading) return (
     <div className="flex justify-center items-center h-64">
@@ -43,12 +44,6 @@ export function MedicalRecordList({ onAddRecord }: MedicalRecordListProps) {
     </div>
   );
 
-  if (items.length === 0) return (
-    <div className="text-center text-muted-foreground p-8">
-      No records found.
-    </div>
-  );
-
   return (
     <Card className="shadow-smooth border-none bg-background/50 backdrop-blur-sm">
       <CardHeader>
@@ -63,8 +58,8 @@ export function MedicalRecordList({ onAddRecord }: MedicalRecordListProps) {
                 : "Your documented patient diagnoses and treatments"}
             </CardDescription>
           </div>
-          {/* Only DOCTOR can create records — ADMIN cannot */}
-          {isDoctor && (
+          {/* DOCTOR and NURSE can create records — ADMIN cannot */}
+          {(isDoctor || isNurse) && (
             <Button onClick={onAddRecord} className="shrink-0 gap-2 shadow-glow">
               <Plus className="h-4 w-4" />
               New Entry
@@ -97,63 +92,70 @@ export function MedicalRecordList({ onAddRecord }: MedicalRecordListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((record: any) => (
-                <TableRow key={record.id} className="group transition-colors">
-                  <TableCell className="font-medium align-top py-4">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Stethoscope className="h-4 w-4" />
-                      <span>{record.diagnosis}</span>
-                    </div>
-                  </TableCell>
-                  {isAdmin && (
-                    <TableCell className="align-top py-4">
-                      <div className="text-sm font-semibold">
-                        {record.patientName || `Patient #${record.patientId}`}
-                      </div>
-                    </TableCell>
-                  )}
-                  {isAdmin && (
-                    <TableCell className="align-top py-4">
-                      <div className="text-sm text-muted-foreground">
-                        {record.doctorName || `Doctor #${record.doctorId}`}
-                      </div>
-                    </TableCell>
-                  )}
-                  <TableCell className="align-top py-4">
-                    <div className="flex flex-col text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {new Date(record.visitDate).toLocaleDateString()}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" />
-                        {new Date(record.visitDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-w-md py-4">
-                    <p className="text-sm line-clamp-2 text-muted-foreground italic">
-                      "{record.notes}"
-                    </p>
-                  </TableCell>
-                  <TableCell className="text-right align-top py-4">
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                        onClick={() => {
-                          if (confirm("Permanently archive this medical record?")) {
-                            deleteRecord(record.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isAdmin ? 6 : 4} className="text-center text-muted-foreground h-24">
+                    No records found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                items.map((record: any) => (
+                  <TableRow key={record.id} className="group transition-colors">
+                    <TableCell className="font-medium align-top py-4">
+                      <div className="flex items-center gap-2 text-primary">
+                        <Stethoscope className="h-4 w-4" />
+                        <span>{record.diagnosis}</span>
+                      </div>
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="align-top py-4">
+                        <div className="text-sm font-semibold">
+                          {record.patientName || `Patient #${record.patientId}`}
+                        </div>
+                      </TableCell>
+                    )}
+                    {isAdmin && (
+                      <TableCell className="align-top py-4">
+                        <div className="text-sm text-muted-foreground">
+                          {record.doctorName || `Doctor #${record.doctorId}`}
+                        </div>
+                      </TableCell>
+                    )}
+                    <TableCell className="align-top py-4">
+                      <div className="flex flex-col text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {new Date(record.visitDate).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          {new Date(record.visitDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-md py-4">
+                      <p className="text-sm line-clamp-2 text-muted-foreground italic">
+                        "{record.notes}"
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-right align-top py-4">
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => {
+                            if (confirm("Permanently archive this medical record?")) {
+                              deleteRecord(record.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )))}
             </TableBody>
           </Table>
         </div>

@@ -30,6 +30,11 @@ export const getAllUsers = async (page = 0, size = 10): Promise<any> => {
   return response.data; // Backend should return Page<User>
 };
 
+export const getAvailableDoctorUsers = async (): Promise<User[]> => {
+  const response = await api.get('/users/available-doctors');
+  return response.data;
+};
+
 export const createUser = async (data: UserRequest): Promise<User> => {
   const response = await api.post('/users', data);
   return response.data;

@@ -15,3 +15,7 @@ export const createRoom = async (data: Partial<Room>): Promise<Room> => {
   const response = await api.post("/rooms", data);
   return response.data;
 };
+
+export const deleteRoom = async (id: number): Promise<void> => {
+  await api.delete(`/rooms/${id}`);
+};

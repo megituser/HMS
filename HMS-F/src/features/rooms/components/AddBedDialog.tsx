@@ -9,6 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { useCreateBed } from "../hooks/useBeds";
 import { Loader2 } from "lucide-react";
 
@@ -20,6 +27,7 @@ interface AddBedDialogProps {
 
 export function AddBedDialog({ isOpen, onClose, roomId }: AddBedDialogProps) {
   const [bedNumber, setBedNumber] = useState("");
+  const [bedType, setBedType] = useState("GENERAL");
   const createMutation = useCreateBed();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,11 +37,13 @@ export function AddBedDialog({ isOpen, onClose, roomId }: AddBedDialogProps) {
     await createMutation.mutateAsync({
       bedNumber,
       roomId,
+      bedType,
       status: "AVAILABLE"
     });
 
     onClose();
     setBedNumber("");
+    setBedType("GENERAL");
   };
 
   return (
@@ -58,6 +68,21 @@ export function AddBedDialog({ isOpen, onClose, roomId }: AddBedDialogProps) {
               placeholder="e.g. B-01"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bedType">Bed Type</Label>
+            <Select value={bedType} onValueChange={setBedType}>
+              <SelectTrigger id="bedType">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="GENERAL">General Ward</SelectItem>
+                <SelectItem value="PRIVATE">Private Room</SelectItem>
+                <SelectItem value="ICU">ICU</SelectItem>
+                <SelectItem value="EMERGENCY">Emergency</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>

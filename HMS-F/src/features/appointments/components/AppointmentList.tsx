@@ -41,7 +41,8 @@ import {
   useAuthStore,
   useIsAdmin,
   useIsDoctor,
-  useIsReceptionist
+  useIsReceptionist,
+  useIsAccountant
 } from "@/store/useAuthStore";
 import { StatusBadge } from "@/components/shared/DesignSystem";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,6 +63,7 @@ export function AppointmentList({ }: AppointmentListProps) {
   const isAdmin = useIsAdmin();
   const isDoctor = useIsDoctor();
   const isReceptionist = useIsReceptionist();
+  const isAccountant = useIsAccountant();
 
   // Doctor sees only their own appointments via /appointments/my
   const { data: allData, isLoading: allLoading, isError: allError, refetch: allRefetch } = useAppointments(page, 10);
@@ -226,6 +228,8 @@ export function AppointmentList({ }: AppointmentListProps) {
                           <span className="text-xs text-muted-foreground italic">Archived</span>
                         )}
                       </div>
+                    ) : isAccountant ? (
+                      <span className="text-xs text-muted-foreground italic px-2">Read Only</span>
                     ) : (
                       /* Admin and Receptionist actions */
                       (appt.status === "SCHEDULED" || appt.status === "BOOKED") ? (

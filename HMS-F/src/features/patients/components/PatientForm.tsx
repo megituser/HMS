@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -48,6 +49,7 @@ export function PatientForm({
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -73,6 +75,34 @@ export function PatientForm({
       emergencyContact: "",
     },
   });
+
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        firstName: initialData.firstName || "",
+        lastName: initialData.lastName || "",
+        gender: (initialData.gender?.toUpperCase() as "MALE" | "FEMALE" | "OTHER") || "MALE",
+        dateOfBirth: initialData.dateOfBirth || "",
+        phone: initialData.phone || "",
+        email: initialData.email || "",
+        address: initialData.address || "",
+        bloodGroup: initialData.bloodGroup || "",
+        emergencyContact: initialData.emergencyContact || "",
+      });
+    } else {
+      reset({
+        firstName: "",
+        lastName: "",
+        gender: "MALE",
+        dateOfBirth: new Date().toISOString().split('T')[0],
+        phone: "",
+        email: "",
+        address: "",
+        bloodGroup: "",
+        emergencyContact: "",
+      });
+    }
+  }, [initialData, reset]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

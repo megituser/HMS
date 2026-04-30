@@ -39,8 +39,9 @@ public class AuthController {
             HttpServletRequest httpRequest) {
 
         String ip = getClientIp(httpRequest);
+        String username = req.getUsername() != null ? req.getUsername().trim() : "";
 
-        log.info("Login attempt for username: {} from IP: {}", req.getUsername(), ip);
+        log.info("Login attempt for username: {} from IP: {}", username, ip);
 
         if (!rateLimiter.isAllowed(ip)) {
             log.warn("Rate limit exceeded for IP: {}", ip);
@@ -49,26 +50,25 @@ public class AuthController {
                     .body("Too many login attempts. Please wait 1 minute.");
         }
 
-        User user = userRepo.findByUsername(req.getUsername())
+        User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Login failed — username not found: {}", req.getUsername());
+                    log.warn("Login failed — username not found: {}", username);
                     return new BadRequestException("Invalid credentials");
                 });
 
-        if (!user.isEnabled()) {
-            log.warn("Login failed — user disabled: {}", req.getUsername());
+        if (user.getEnabled() != null && !user.getEnabled()) {
+            log.warn("Login failed — user disabled: {}", username);
             throw new BadRequestException("User is disabled");
         }
 
         if (!encoder.matches(req.getPassword(), user.getPassword())) {
-            log.warn("Login failed — wrong password for username: {} from IP: {}", req.getUsername(), ip);
+            log.warn("Login failed — wrong password for username: {} from IP: {}", username, ip);
             throw new BadRequestException("Invalid credentials");
         }
 
         String accessToken = jwtUtil.generateToken(
                 user.getUsername(),
-                user.getRole().getName()
-        );
+                user.getRole().getName());
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
@@ -78,8 +78,7 @@ public class AuthController {
                 accessToken,
                 refreshToken.getToken(),
                 user.getUsername(),
-                user.getRole().getName()
-        ));
+                user.getRole().getName()));
     }
 
     @PostMapping("/refresh")
@@ -93,15 +92,14 @@ public class AuthController {
         User user = userRepo.findByUsername(refreshToken.getUsername())
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
-        if (!user.isEnabled()) {
+        if (user.getEnabled() != null && !user.getEnabled()) {
             log.warn("Token refresh failed — user disabled: {}", refreshToken.getUsername());
             throw new BadRequestException("User is disabled");
         }
 
         String newAccessToken = jwtUtil.generateToken(
                 user.getUsername(),
-                user.getRole().getName()
-        );
+                user.getRole().getName());
 
         log.info("Token refreshed successfully for username: {}", user.getUsername());
 
@@ -109,8 +107,7 @@ public class AuthController {
                 newAccessToken,
                 refreshToken.getToken(),
                 user.getUsername(),
-                user.getRole().getName()
-        ));
+                user.getRole().getName()));
     }
 
     @PostMapping("/logout")

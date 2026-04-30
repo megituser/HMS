@@ -1,42 +1,45 @@
 import { useState, useMemo } from "react";
-import { 
-  PageHeader, 
-  StatCard 
+import {
+  PageHeader,
+  StatCard
 } from "@/components/shared/DesignSystem";
-import { 
-  Stethoscope, 
+import {
+  Stethoscope,
   Briefcase,
   UserCheck,
   UserX,
 } from "lucide-react";
 import { DoctorList } from "@/features/doctors/components/DoctorList";
 import { DoctorForm } from "@/features/doctors/components/DoctorForm";
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetDescription, 
-  SheetHeader, 
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { 
-  useCreateDoctor, 
-  useUpdateDoctor, 
-  useDeactivateDoctor, 
+import {
+  useCreateDoctor,
+  useUpdateDoctor,
+  useDeactivateDoctor,
   useDoctors,
 } from "@/hooks/useDoctors";
 
 export function DoctorsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingDoctorId, setEditingDoctorId] = useState<number | null>(null);
-  
-  const editingDoctor = null; // useDoctor not available for single fetch
-  
+
   const { mutate: createDoctor, isPending: isCreating } = useCreateDoctor();
   const { mutate: updateDoctor, isPending: isUpdating } = useUpdateDoctor();
   const { mutate: deactivateDoctor } = useDeactivateDoctor();
 
   // Fetch doctors to derive real stats
   const { data: doctorsData } = useDoctors(0, 100);
+
+  const editingDoctor = useMemo(() => {
+    if (!editingDoctorId || !doctorsData?.content) return null;
+    return doctorsData.content.find((d: any) => d.id === editingDoctorId) || null;
+  }, [editingDoctorId, doctorsData]);
 
   const stats = useMemo(() => {
     const items: any[] = doctorsData?.content ?? [];
@@ -104,8 +107,8 @@ export function DoctorsPage() {
       </div>
 
       <div className="flex flex-col gap-6">
-        <DoctorList 
-          onAddDoctor={handleAddDoctor} 
+        <DoctorList
+          onAddDoctor={handleAddDoctor}
           onEditDoctor={handleEditDoctor}
           onViewDoctor={(id) => console.log('View', id)}
           onDeleteDoctor={(id) => {
@@ -124,12 +127,12 @@ export function DoctorsPage() {
               {editingDoctorId ? "Update Medical Staff" : "Add New Medical Specialist"}
             </SheetTitle>
             <SheetDescription>
-              {editingDoctorId 
-                ? "Modify the doctor's professional profile and assignments." 
+              {editingDoctorId
+                ? "Modify the doctor's professional profile and assignments."
                 : "Fill in the details to register a new doctor in the system."}
             </SheetDescription>
           </SheetHeader>
-          
+
           <DoctorForm
             initialData={editingDoctor}
             onSubmit={handleFormSubmit}

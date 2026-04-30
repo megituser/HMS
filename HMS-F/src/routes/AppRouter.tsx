@@ -52,12 +52,15 @@ function RoleDashboard() {
 export function AppRouter() {
   // ─── Role Groups ────────────────────────────────────────────────────────────
   // Keep role arrays here — single source of truth for access control
-  const allRoles = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST', 'ROLE_ACCOUNTANT'];
+  const allRoles = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST', 'ROLE_ACCOUNTANT', 'ROLE_NURSE'];
   const adminDoctorStaff = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST'];
   const adminDoctor = ['ROLE_ADMIN', 'ROLE_DOCTOR'];
   const adminReceptionist = ['ROLE_ADMIN', 'ROLE_RECEPTIONIST'];
-  // FIX: billing uses RECEPTIONIST not ACCOUNTANT — must match SecurityConfig
-  const billingRoles = ['ROLE_ADMIN', 'ROLE_RECEPTIONIST'];
+  const adminDoctorNurse = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_NURSE'];
+  const billingRoles = ['ROLE_ADMIN', 'ROLE_RECEPTIONIST', 'ROLE_ACCOUNTANT'];
+  const patientRoles = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST', 'ROLE_ACCOUNTANT', 'ROLE_NURSE'];
+  const clinicalReadOnlyRoles = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST', 'ROLE_NURSE'];
+  const fullClinicalWithAccountant = ['ROLE_ADMIN', 'ROLE_DOCTOR', 'ROLE_RECEPTIONIST', 'ROLE_NURSE', 'ROLE_ACCOUNTANT'];
 
   return (
     <Routes>
@@ -86,7 +89,7 @@ export function AppRouter() {
 
           {/* ── Appointments ─────────────────────────────────────────────── */}
           <Route path="appointments" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={fullClinicalWithAccountant}>
               <AppointmentsPage />
             </ProtectedRoute>
           } />
@@ -99,12 +102,12 @@ export function AppRouter() {
 
           {/* ── Patients ─────────────────────────────────────────────────── */}
           <Route path="patients" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={patientRoles}>
               <PatientsPage />
             </ProtectedRoute>
           } />
           <Route path="patients/:id" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={patientRoles}>
               <PlaceholderPage title="Patient Profile" />
             </ProtectedRoute>
           } />
@@ -119,12 +122,12 @@ export function AppRouter() {
           } />
           {/* FIX: RECEPTIONIST needs to see doctors list to book appointments */}
           <Route path="doctors" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={clinicalReadOnlyRoles}>
               <DoctorsPage />
             </ProtectedRoute>
           } />
           <Route path="doctors/:id" element={
-            <ProtectedRoute allowedRoles={adminDoctorStaff}>
+            <ProtectedRoute allowedRoles={clinicalReadOnlyRoles}>
               <PlaceholderPage title="Doctor Profile" />
             </ProtectedRoute>
           } />
@@ -138,7 +141,7 @@ export function AppRouter() {
           } />
           {/* ADMIN sees all records, DOCTOR sees their own — handled inside MedicalRecordsPage */}
           <Route path="medical-records" element={
-            <ProtectedRoute allowedRoles={adminDoctor}>
+            <ProtectedRoute allowedRoles={adminDoctorNurse}>
               <MedicalRecordsPage />
             </ProtectedRoute>
           } />
@@ -154,21 +157,21 @@ export function AppRouter() {
           {/* ── Departments ───────────────────────────────────────────────── */}
           {/* All clinical staff can view — only ADMIN can manage (enforced by backend) */}
           <Route path="departments" element={
-            <ProtectedRoute allowedRoles={adminReceptionist}>
+            <ProtectedRoute allowedRoles={fullClinicalWithAccountant}>
               <DepartmentsPage />
             </ProtectedRoute>
           } />
 
           {/* ── Rooms & Beds ──────────────────────────────────────────────── */}
           <Route path="rooms" element={
-            <ProtectedRoute allowedRoles={adminReceptionist}>
+            <ProtectedRoute allowedRoles={fullClinicalWithAccountant}>
               <RoomsPage />
             </ProtectedRoute>
           } />
 
           {/* ── Admissions ────────────────────────────────────────────────── */}
           <Route path="admissions" element={
-            <ProtectedRoute allowedRoles={adminReceptionist}>
+            <ProtectedRoute allowedRoles={fullClinicalWithAccountant}>
               <AdmissionsPage />
             </ProtectedRoute>
           } />
@@ -180,7 +183,7 @@ export function AppRouter() {
             </ProtectedRoute>
           } />
           <Route path="reports" element={
-            <ProtectedRoute allowedRoles={['ROLE_ADMIN']}>
+            <ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ROLE_ACCOUNTANT']}>
               <ReportsPage />
             </ProtectedRoute>
           } />

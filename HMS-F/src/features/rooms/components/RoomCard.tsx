@@ -13,10 +13,11 @@ interface RoomCardProps {
   onDischarge?: (room: Room, bed: Bed, admission: Admission) => void;
   onAddBed?: (roomId: number) => void;
   admissionMap?: Record<number, Admission>;
-  canManage?: boolean;
+  canManageBeds?: boolean;
+  canManageRoom?: boolean;
 }
 
-export function RoomCard({ room, onClick, onAdmit, onDischarge, onAddBed, admissionMap = {}, canManage = false }: RoomCardProps) {
+export function RoomCard({ room, onClick, onAdmit, onDischarge, onAddBed, admissionMap = {}, canManageBeds = false, canManageRoom = false }: RoomCardProps) {
   const isFull = room.availableBeds === 0;
   const { data: beds, isLoading } = useBeds(room.id);
 
@@ -65,7 +66,7 @@ export function RoomCard({ room, onClick, onAdmit, onDischarge, onAddBed, admiss
         <div className="mt-4 border-t pt-4 space-y-3" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center">
             <h4 className="font-semibold text-sm">Beds in this Room</h4>
-            {canManage && onAddBed && (
+            {canManageRoom && onAddBed && (
               <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => onAddBed(room.id)}>
                 <Plus className="h-3.5 w-3.5" /> Add Bed
               </Button>
@@ -97,7 +98,7 @@ export function RoomCard({ room, onClick, onAdmit, onDischarge, onAddBed, admiss
                         </span>
                       )}
                     </div>
-                    {canManage && bed.status === 'AVAILABLE' && onAdmit && (
+                    {canManageBeds && bed.status === 'AVAILABLE' && onAdmit && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -107,7 +108,7 @@ export function RoomCard({ room, onClick, onAdmit, onDischarge, onAddBed, admiss
                         Admit Patient
                       </Button>
                     )}
-                    {canManage && bed.status === 'OCCUPIED' && admission && onDischarge && (
+                    {canManageBeds && bed.status === 'OCCUPIED' && admission && onDischarge && (
                       <Button
                         size="sm"
                         variant="outline"

@@ -37,22 +37,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  useAuthStore, 
-  useIsAdmin, 
-  useIsDoctor, 
-  useIsReceptionist, 
-  useIsAccountant 
+import {
+  useAuthStore,
+  useIsAdmin,
+  useIsDoctor,
+  useIsReceptionist,
+  useIsAccountant,
+  useIsNurse
 } from "@/store/useAuthStore";
 
 export function AppSidebar() {
   const { user, role, logout } = useAuthStore();
   const location = useLocation();
-  
+
   const isAdmin = useIsAdmin();
   const isDoctor = useIsDoctor();
   const isReceptionist = useIsReceptionist();
   const isAccountant = useIsAccountant();
+  const isNurse = useIsNurse();
 
   // Helper to check if a path is active
   const isActive = (path: string) => location.pathname === path;
@@ -101,12 +103,12 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Clinical Section (Appointments, Patients, Medical Records) */}
-        {(isAdmin || isDoctor || isReceptionist) && (
+        {(isAdmin || isDoctor || isReceptionist || isAccountant || isNurse) && (
           <SidebarGroup>
             <SidebarGroupLabel>Clinical</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {/* Appointments: Admin, Doctor, Receptionist */}
+                {/* Appointments: Admin, Doctor, Receptionist, Accountant */}
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     render={<Link to="/appointments" />}
@@ -118,7 +120,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {/* Patients: Admin, Doctor, Receptionist */}
+                {/* Patients: Admin, Doctor, Receptionist, Accountant */}
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     render={<Link to="/patients" />}
@@ -130,8 +132,8 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {/* Medical Records: Admin, Doctor */}
-                {(isAdmin || isDoctor) && (
+                {/* Medical Records: Admin, Doctor, Nurse */}
+                {(isAdmin || isDoctor || isNurse) && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       render={<Link to="/medical-records" />}
@@ -165,7 +167,7 @@ export function AppSidebar() {
         <SidebarSeparator />
 
         {/* Management Section (Doctors, Departments, Hospital) — Admin/Receptionist only */}
-        {(isAdmin || isReceptionist) && (
+        {(isAdmin || isReceptionist || isNurse) && (
           <SidebarGroup>
             <SidebarGroupLabel>Management</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -244,23 +246,25 @@ export function AppSidebar() {
         )}
 
         {/* Administration Section */}
-        {isAdmin && (
+        {(isAdmin || isAccountant) && (
           <>
             <SidebarSeparator />
             <SidebarGroup>
               <SidebarGroupLabel>Administration</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      render={<Link to="/users" />}
-                      isActive={isActive("/users")}
-                      tooltip="User Management"
-                    >
-                      <UserCog />
-                      <span>Users</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {isAdmin && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        render={<Link to="/users" />}
+                        isActive={isActive("/users")}
+                        tooltip="User Management"
+                      >
+                        <UserCog />
+                        <span>Users</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       render={<Link to="/reports" />}
@@ -280,34 +284,32 @@ export function AppSidebar() {
         <SidebarSeparator />
 
         {/* Support Navigation */}
-        {!isAccountant && (
-          <SidebarGroup className="mt-auto">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    render={<Link to="/settings" />}
-                    isActive={isActive("/settings")}
-                    tooltip="Settings"
-                  >
-                    <Settings />
-                    <span>Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    render={<Link to="/help" />}
-                    isActive={isActive("/help")}
-                    tooltip="Help & Support"
-                  >
-                    <HelpCircle />
-                    <span>Help & Support</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link to="/settings" />}
+                  isActive={isActive("/settings")}
+                  tooltip="Settings"
+                >
+                  <Settings />
+                  <span>Settings</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link to="/help" />}
+                  isActive={isActive("/help")}
+                  tooltip="Help & Support"
+                >
+                  <HelpCircle />
+                  <span>Help & Support</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">

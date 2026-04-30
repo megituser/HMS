@@ -22,6 +22,7 @@ import {
 import { type MedicalRecordRequest } from "@/api/medicalRecordsAPI";
 import { usePatients } from "@/hooks/usePatients";
 import { cn } from "@/lib/utils";
+import { useIsNurse } from "@/store/useAuthStore";
 
 const medicalRecordSchema = z.object({
   patientId: z.coerce.number().min(1, "Please select a patient"),
@@ -56,6 +57,7 @@ export function MedicalRecordForm({
   onCancel 
 }: MedicalRecordFormProps) {
   const { data: patientsData, isLoading: isLoadingPatients } = usePatients(0, 100);
+  const isNurse = useIsNurse();
 
   const {
     register,
@@ -67,6 +69,7 @@ export function MedicalRecordForm({
     defaultValues: {
       visitDate: new Date().toISOString().split('T')[0],
       visitTime: new Date().toTimeString().slice(0, 5),
+      diagnosis: isNurse ? "Nursing Assessment & Vitals" : "",
     },
   });
 
@@ -117,7 +120,11 @@ export function MedicalRecordForm({
             id="diagnosis"
             {...register("diagnosis")}
             placeholder="e.g. Acute Bronchitis"
-            className={cn(errors.diagnosis && "border-destructive focus-visible:ring-destructive/20")}
+            disabled={isNurse}
+            className={cn(
+              errors.diagnosis && "border-destructive focus-visible:ring-destructive/20",
+              isNurse && "bg-muted cursor-not-allowed opacity-70"
+            )}
           />
           {errors.diagnosis && <p className="text-xs text-destructive">{errors.diagnosis.message}</p>}
         </div>

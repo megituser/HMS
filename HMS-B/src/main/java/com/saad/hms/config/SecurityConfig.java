@@ -35,17 +35,17 @@ public class SecurityConfig {
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
                 http
-                        .csrf(csrf -> csrf.disable())
-                        .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                        .sessionManagement(session -> session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS))
-                        .exceptionHandling(ex -> ex
-                                .authenticationEntryPoint(entryPoint)
-                                .accessDeniedHandler(deniedHandler))
+                                .csrf(csrf -> csrf.disable())
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint(entryPoint)
+                                                .accessDeniedHandler(deniedHandler))
 
-                        .authorizeHttpRequests(auth -> auth
+                                .authorizeHttpRequests(auth -> auth
 
-                                .requestMatchers(OPTIONS, "/**").permitAll()
+                                                .requestMatchers(OPTIONS, "/**").permitAll()
 
                                                 // ─── SWAGGER ────────────────────────────────────────
                                                 .requestMatchers(
@@ -65,18 +65,18 @@ public class SecurityConfig {
 
                                                 // ─── DASHBOARD ───────────────────────────────────────
                                                 .requestMatchers(GET, "/api/dashboard/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE")
+                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE", "ACCOUNTANT")
 
                                                 // ─── PATIENTS ────────────────────────────────────────
-                                                // All clinical staff can view patients
+                                                // All clinical staff and accountants can view patients
                                                 .requestMatchers(GET, "/api/patients/**")
-                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE")
+                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "DOCTOR", "NURSE", "ACCOUNTANT")
                                                 // ADMIN and RECEPTIONIST can register new patients
                                                 .requestMatchers(POST, "/api/patients/**")
                                                 .hasAnyRole("ADMIN", "RECEPTIONIST")
-                                                // ADMIN and RECEPTIONIST can update patient info
+                                                // ADMIN, RECEPTIONIST and NURSE can update patient info
                                                 .requestMatchers(PUT, "/api/patients/**")
-                                                .hasAnyRole("ADMIN", "RECEPTIONIST")
+                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "NURSE")
                                                 // Only ADMIN can delete patients
                                                 .requestMatchers(DELETE, "/api/patients/**")
                                                 .hasRole("ADMIN")
@@ -118,15 +118,15 @@ public class SecurityConfig {
                                                 // Doctor's own medical records (must come before /**)
                                                 .requestMatchers(GET, "/api/medical-records/my")
                                                 .hasRole("DOCTOR")
-                                                // ADMIN and DOCTOR can view all medical records
+                                                // ADMIN, DOCTOR, and NURSE can view all medical records
                                                 .requestMatchers(GET, "/api/medical-records/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR")
-                                                // Only DOCTOR can create medical records
+                                                .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+                                                // DOCTOR and NURSE can create medical records
                                                 .requestMatchers(POST, "/api/medical-records/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR")
-                                                // Only DOCTOR can update medical records
+                                                .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+                                                // DOCTOR and NURSE can update medical records
                                                 .requestMatchers(PUT, "/api/medical-records/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR")
+                                                .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
                                                 // Only ADMIN can delete medical records
                                                 .requestMatchers(DELETE, "/api/medical-records/**")
                                                 .hasRole("ADMIN")
@@ -134,23 +134,24 @@ public class SecurityConfig {
                                                 // ─── BILLING & INVOICES ───────────────────────────────
                                                 // PDF export for clinical + billing staff
                                                 .requestMatchers(GET, "/api/invoices/*/pdf")
-                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "DOCTOR")
+                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "DOCTOR", "ACCOUNTANT")
                                                 // All billing-relevant staff can view invoices
                                                 .requestMatchers(GET, "/api/invoices/**")
-                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "DOCTOR")
-                                                // ADMIN and RECEPTIONIST can create invoices
+                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "DOCTOR", "ACCOUNTANT")
+                                                // ADMIN, RECEPTIONIST and ACCOUNTANT can create invoices
                                                 .requestMatchers(POST, "/api/invoices/**")
-                                                .hasAnyRole("ADMIN", "RECEPTIONIST")
-                                                // Only ADMIN can update or delete invoices
+                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "ACCOUNTANT")
+                                                // ADMIN and ACCOUNTANT can update invoices
                                                 .requestMatchers(PUT, "/api/invoices/**")
-                                                .hasRole("ADMIN")
+                                                .hasAnyRole("ADMIN", "ACCOUNTANT")
+                                                // Only ADMIN can delete invoices
                                                 .requestMatchers(DELETE, "/api/invoices/**")
                                                 .hasRole("ADMIN")
 
                                                 // ─── DEPARTMENTS ──────────────────────────────────────
                                                 // All staff can view departments
                                                 .requestMatchers(GET, "/api/departments/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE")
+                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE", "ACCOUNTANT")
                                                 // Only ADMIN can manage departments
                                                 .requestMatchers(POST, "/api/departments/**")
                                                 .hasRole("ADMIN")
@@ -160,9 +161,9 @@ public class SecurityConfig {
                                                 .hasRole("ADMIN")
 
                                                 // ─── ROOMS ────────────────────────────────────────────
-                                                // Clinical staff can view rooms
+                                                // Clinical staff and accountants can view rooms
                                                 .requestMatchers(GET, "/api/rooms/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE")
+                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE", "ACCOUNTANT")
                                                 // Only ADMIN can manage rooms
                                                 .requestMatchers(POST, "/api/rooms/**")
                                                 .hasRole("ADMIN")
@@ -172,24 +173,24 @@ public class SecurityConfig {
                                                 .hasRole("ADMIN")
 
                                                 // ─── BEDS ─────────────────────────────────────────────
-                                                // Clinical staff can view beds
+                                                // Clinical staff and accountants can view beds
                                                 .requestMatchers(GET, "/api/beds/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE")
+                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE", "ACCOUNTANT")
                                                 // Only ADMIN can create/delete beds
                                                 .requestMatchers(POST, "/api/beds/**")
                                                 .hasRole("ADMIN")
                                                 .requestMatchers(DELETE, "/api/beds/**")
                                                 .hasRole("ADMIN")
-                                                // ADMIN and RECEPTIONIST can update bed status (assign/release)
+                                                // ADMIN, RECEPTIONIST, and NURSE can update bed status (assign/release)
                                                 .requestMatchers(PUT, "/api/beds/**")
-                                                .hasAnyRole("ADMIN", "RECEPTIONIST")
+                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "NURSE")
                                                 .requestMatchers(PATCH, "/api/beds/**")
-                                                .hasAnyRole("ADMIN", "RECEPTIONIST")
+                                                .hasAnyRole("ADMIN", "RECEPTIONIST", "NURSE")
 
                                                 // ─── ADMISSIONS ───────────────────────────────────────
-                                                // All clinical staff can view admissions
+                                                // All clinical staff and accountants can view admissions
                                                 .requestMatchers(GET, "/api/admissions/**")
-                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE")
+                                                .hasAnyRole("ADMIN", "DOCTOR", "RECEPTIONIST", "NURSE", "ACCOUNTANT")
                                                 // ADMIN and RECEPTIONIST can create admissions
                                                 .requestMatchers(POST, "/api/admissions/**")
                                                 .hasAnyRole("ADMIN", "RECEPTIONIST")
@@ -203,9 +204,9 @@ public class SecurityConfig {
                                                 .hasRole("ADMIN")
 
                                                 // ─── REPORTS ──────────────────────────────────────────
-                                                // Only ADMIN can access reports
+                                                // Only ADMIN and ACCOUNTANT can access reports
                                                 .requestMatchers("/api/reports/**")
-                                                .hasRole("ADMIN")
+                                                .hasAnyRole("ADMIN", "ACCOUNTANT")
 
                                                 // ─── FALLBACK ─────────────────────────────────────────
                                                 .anyRequest().authenticated())
